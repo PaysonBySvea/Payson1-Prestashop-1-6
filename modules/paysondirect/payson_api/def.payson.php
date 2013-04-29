@@ -1,11 +1,14 @@
 <?php
 
+if (!isset($_SESSION)) {
+    session_start();
+}
 /**
  * @copyright 2010 Payson
  */
 //Minimal order values
 $paysonInvoiceMinimalOrderValue = 30;
- 
+
 //Default values in array position 0
 $paysonCurrenciesSupported = array('SEK', 'EUR');
 $paysonInvoiceCurrenciesSupported = array('SEK');
@@ -16,23 +19,23 @@ $paysonFeesPayerSupported = array('EACHRECEIVER', 'PRIMARYRECEIVER', 'SENDER', '
 $paysonTokenRequestURL = "https://api.payson.se/1.0/Pay/";
 $paysonBrowserRedirectURL = "https://www.payson.se/paySecure/?token=";
 $paysonBrowserPostURL = "https://www.payson.se/paySecure/";
-$paysonPaymentDetailsURL = "https://api.payson.se/1.0/PaymentDetails/"; 
+$paysonPaymentDetailsURL = "https://api.payson.se/1.0/PaymentDetails/";
 $paysonIpnMessageValidationURL = "https://api.payson.se/1.0/Validate/";
 $paysonPaymentUpdateURL = "https://api.payson.se/1.0/PaymentUpdate/";
 //LINKs
 $paysonSignInLink = "https://www.payson.se/SignIn/";
 $paysonSignUpLink = "https://www.payson.se/account/signup/";
 $paysonApiDocLink = "https://api.payson.se/";
-$paysonInfoLink   = "https://www.payson.se";
+$paysonInfoLink = "https://www.payson.se";
 
 //shop texts, language dependent
-$paysonShop['EN']['mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
-$paysonShop['SV']['mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
-$paysonShop['FI']['mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['EN']['mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['SV']['mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['FI']['mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
 
-$paysonShop['EN']['inv_mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
-$paysonShop['SV']['inv_mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
-$paysonShop['FI']['inv_mark_button_img']= "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['EN']['inv_mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['SV']['inv_mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
+$paysonShop['FI']['inv_mark_button_img'] = "https://www.payson.se/sites/all/files/images/external/payson-72x29.jpg";
 
 $paysonShop['EN']['check_out_w_payson'] = 'Checkout with Payson';
 $paysonShop['SV']['check_out_w_payson'] = 'Betala med Payson';
@@ -43,9 +46,9 @@ $paysonShop['SV']['inv_check_out_w_payson'] = 'Betala med Payson Faktura';
 $paysonShop['FI']['inv_check_out_w_payson'] = 'Betala med Payson Faktura';
 
 
-$paysonShop['EN']['read_more_link'] = '<a href="'.$paysonInfoLink.'" target="_blank">Read more</a>';
-$paysonShop['SV']['read_more_link'] = '<a href="'.$paysonInfoLink.'" target="_blank">Läs mer</a>';
-$paysonShop['FI']['read_more_link'] = '<a href="'.$paysonInfoLink.'" target="_blank">Läs mer</a>';
+$paysonShop['EN']['read_more_link'] = '<a href="' . $paysonInfoLink . '" target="_blank">Read more</a>';
+$paysonShop['SV']['read_more_link'] = '<a href="' . $paysonInfoLink . '" target="_blank">Läs mer</a>';
+$paysonShop['FI']['read_more_link'] = '<a href="' . $paysonInfoLink . '" target="_blank">Läs mer</a>';
 
 $paysonShop['EN']['order_id_from_text'] = 'Order: %s from ';
 $paysonShop['SV']['order_id_from_text'] = 'Order: %s från ';
@@ -60,19 +63,19 @@ $paysonShop['EN']['mailtext_paysonreference'] = 'Payment Approved by Payson with
 $paysonShop['SV']['mailtext_paysonreference'] = 'Betalning har genomförts via Payson med Referensnummer';
 $paysonShop['FI']['mailtext_paysonreference'] = 'Betalning har genomförts via Payson med Referensnummer';
 
-$paysonShop['EN']['inv_mailtext_paysonreference'] ='Invoice is sent from Payson upon delivery. Reference Number';
-$paysonShop['SV']['inv_mailtext_paysonreference'] ='Faktura från Payson skickas när varorna skickats. Referensnummer';
-$paysonShop['FI']['inv_mailtext_paysonreference'] ='Faktura från Payson skickas när varorna skickats. Referensnummer';
+$paysonShop['EN']['inv_mailtext_paysonreference'] = 'Invoice is sent from Payson upon delivery. Reference Number';
+$paysonShop['SV']['inv_mailtext_paysonreference'] = 'Faktura från Payson skickas när varorna skickats. Referensnummer';
+$paysonShop['FI']['inv_mailtext_paysonreference'] = 'Faktura från Payson skickas när varorna skickats. Referensnummer';
 
 
 //do not increase text length on this, Prestashop use a max length of 32 chars and the Payson payment ref must also be included.
-$paysonShop['EN']['paysonreference_ps'] ='Payson RefNr: ';
-$paysonShop['SV']['paysonreference_ps'] ='Payson Refnr: ';
-$paysonShop['FI']['paysonreference_ps'] ='Payson Refnr: ';
+$paysonShop['EN']['paysonreference_ps'] = 'Payson RefNr: ';
+$paysonShop['SV']['paysonreference_ps'] = 'Payson Refnr: ';
+$paysonShop['FI']['paysonreference_ps'] = 'Payson Refnr: ';
 
-$paysonShop['EN']['inv_paysonreference_ps'] ='Payson Invoice RefNr: ';
-$paysonShop['SV']['inv_paysonreference_ps'] ='Payson Faktura Refnr: ';
-$paysonShop['FI']['inv_paysonreference_ps'] ='Payson Faktura Refnr: ';
+$paysonShop['EN']['inv_paysonreference_ps'] = 'Payson Invoice RefNr: ';
+$paysonShop['SV']['inv_paysonreference_ps'] = 'Payson Faktura Refnr: ';
+$paysonShop['FI']['inv_paysonreference_ps'] = 'Payson Faktura Refnr: ';
 
 
 
@@ -96,12 +99,12 @@ $paysonAdmin['SV']['inv_text_catalog_title'] = "Payson Faktura";
 $paysonAdmin['FI']['inv_text_catalog_title'] = "Payson Faktura";
 
 
-$paysonAdmin['EN']['config_instruction1'] = '<strong>Payson</strong><br /><a href="'.$paysonSignInLink.'" target="_blank">Manage your Payson account.</a><br /><br /><font color="green">Configuration Instructions:</font><br />
-  1. <a href="'.$paysonSignUpLink.'" target="_blank">Sign up for your Payson account - click here.</a><br />';
-$paysonAdmin['SV']['config_instruction1'] = '<strong>Payson</strong><br /><a href="'.$paysonSignInLink.'" target="_blank">Hantera ditt Paysonkonto.</a><br /><br /><font color="green">Konfigureringsinstruktioner:</font><br />
-  1. <a href="'.$paysonSignUpLink.'" target="_blank">Skapa ditt Paysonkonto - klicka här.</a><br />';
-$paysonAdmin['SV']['config_instruction1'] = '<strong>Payson</strong><br /><a href="'.$paysonSignInLink.'" target="_blank">Hantera ditt Paysonkonto.</a><br /><br /><font color="green">Konfigureringsinstruktioner:</font><br />
-  1. <a href="'.$paysonSignUpLink.'" target="_blank">Skapa ditt Paysonkonto - klicka här.</a><br />';
+$paysonAdmin['EN']['config_instruction1'] = '<strong>Payson</strong><br /><a href="' . $paysonSignInLink . '" target="_blank">Manage your Payson account.</a><br /><br /><font color="green">Configuration Instructions:</font><br />
+  1. <a href="' . $paysonSignUpLink . '" target="_blank">Sign up for your Payson account - click here.</a><br />';
+$paysonAdmin['SV']['config_instruction1'] = '<strong>Payson</strong><br /><a href="' . $paysonSignInLink . '" target="_blank">Hantera ditt Paysonkonto.</a><br /><br /><font color="green">Konfigureringsinstruktioner:</font><br />
+  1. <a href="' . $paysonSignUpLink . '" target="_blank">Skapa ditt Paysonkonto - klicka här.</a><br />';
+$paysonAdmin['SV']['config_instruction1'] = '<strong>Payson</strong><br /><a href="' . $paysonSignInLink . '" target="_blank">Hantera ditt Paysonkonto.</a><br /><br /><font color="green">Konfigureringsinstruktioner:</font><br />
+  1. <a href="' . $paysonSignUpLink . '" target="_blank">Skapa ditt Paysonkonto - klicka här.</a><br />';
 
 $paysonAdmin['EN']['config_instruction2'] = '2. ...and click "install" above to enable Payson support... and "edit" your Payson settings.';
 $paysonAdmin['SV']['config_instruction2'] = '2. ...och klicka "install" ovan för att aktivera Payson support... och "edit" dina Paysoninställningar.';
@@ -115,9 +118,9 @@ $paysonAdmin['FI']['config_instruction2_vm'] = '2. ...och fyll i formulär nedan
 
 
 
-$paysonAdmin['EN']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Requirements:</strong></font><br /><hr />*<strong>Payson Account</strong> (<a href="'.$paysonSignUpLink.'" target="_blank">click to signup</a>)<br />*<strong>*<strong>Port 80</strong> is used for bidirectional communication with the gateway, so must be open on your host\'s router/firewall<br />*<strong>Settings</strong> must be configured as described above.';
-$paysonAdmin['SV']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Krav:</strong></font><br /><hr />*<strong>Paysonkonto</strong> (<a href="'.$paysonSignUpLink.'" target="_blank">klicka här för att skapa</a>)<br />*<strong>*<strong>Port 80</strong> används för dubbelriktad kommunikation med Paysons server, så den måste vara öppen i din host\'s router/firewall<br />*<strong>Inställningar</strong> måste konfigureras enligt ovan beskrivet.';
-$paysonAdmin['FI']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Krav:</strong></font><br /><hr />*<strong>Paysonkonto</strong> (<a href="'.$paysonSignUpLink.'" target="_blank">klicka här för att skapa</a>)<br />*<strong>*<strong>Port 80</strong> används för dubbelriktad kommunikation med Paysons server, så den måste vara öppen i din host\'s router/firewall<br />*<strong>Inställningar</strong> måste konfigureras enligt ovan beskrivet.';
+$paysonAdmin['EN']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Requirements:</strong></font><br /><hr />*<strong>Payson Account</strong> (<a href="' . $paysonSignUpLink . '" target="_blank">click to signup</a>)<br />*<strong>*<strong>Port 80</strong> is used for bidirectional communication with the gateway, so must be open on your host\'s router/firewall<br />*<strong>Settings</strong> must be configured as described above.';
+$paysonAdmin['SV']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Krav:</strong></font><br /><hr />*<strong>Paysonkonto</strong> (<a href="' . $paysonSignUpLink . '" target="_blank">klicka här för att skapa</a>)<br />*<strong>*<strong>Port 80</strong> används för dubbelriktad kommunikation med Paysons server, så den måste vara öppen i din host\'s router/firewall<br />*<strong>Inställningar</strong> måste konfigureras enligt ovan beskrivet.';
+$paysonAdmin['FI']['config_instruction3'] = '</ul><font color="green"><hr /><strong>Krav:</strong></font><br /><hr />*<strong>Paysonkonto</strong> (<a href="' . $paysonSignUpLink . '" target="_blank">klicka här för att skapa</a>)<br />*<strong>*<strong>Port 80</strong> används för dubbelriktad kommunikation med Paysons server, så den måste vara öppen i din host\'s router/firewall<br />*<strong>Inställningar</strong> måste konfigureras enligt ovan beskrivet.';
 
 $paysonAdmin['EN']['vm_invoiceFee_text'] = 'To use invoiceFee(max 30 SEK), apply a negative discount on this payment method.';
 $paysonAdmin['SV']['vm_invoiceFee_text'] = 'För att använda fakturaavgift(max 30 SEK), använd en negativ rabatt för denna betalmetod';
@@ -158,11 +161,11 @@ $paysonAdmin['EN']['agentid_text'] = 'Agent Id for your Payson account.';
 $paysonAdmin['SV']['agentid_text'] = 'AgentId för ditt Paysonkonto.';
 $paysonAdmin['FI']['agentid_text'] = 'AgentId för ditt Paysonkonto.';
 
-$paysonAdmin['EN']['selleremail_head'] = 'Seller Email'; 
+$paysonAdmin['EN']['selleremail_head'] = 'Seller Email';
 $paysonAdmin['EN']['selleremail_text'] = 'Email address for your Payson account.<br />NOTE: This must match <strong>EXACTLY </strong>the primary email address on your Payson account settings.';
-$paysonAdmin['SV']['selleremail_head'] = 'Säljarens Email'; 
+$paysonAdmin['SV']['selleremail_head'] = 'Säljarens Email';
 $paysonAdmin['SV']['selleremail_text'] = 'Emailadress för ditt Paysonkonto.<br />OBS: Denna måste vara <strong>identisk </strong>med den emailadress som för ditt Paysonkonto.';
-$paysonAdmin['FI']['selleremail_head'] = 'Säljarens Email'; 
+$paysonAdmin['FI']['selleremail_head'] = 'Säljarens Email';
 $paysonAdmin['FI']['selleremail_text'] = 'Emailadress för ditt Paysonkonto.<br />OBS: Denna måste vara <strong>identisk </strong>med den emailadress som för ditt Paysonkonto.';
 
 $paysonAdmin['EN']['md5key_head'] = 'MD5 Key';
@@ -298,5 +301,11 @@ $paysonAdmin['SV']['inv_status_history_head2'] = '<td>Datum</td> <td>Status</td>
 $paysonAdmin['FI']['inv_status_history_head2'] = '<td>Datum</td> <td>Status</td> <td>Uppdatering</td>';
 
 //db table names
-$paysonDbTableOrderEvents   = "payson_order_event";
+$paysonDbTableOrderEvents = "payson_order_event";
+
+$db = Db::getInstance();
+
+$orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='payson' ORDER BY id_order_state asc");
+
+$_SESSION["_PS_OS_PAYSON_PAID"] = $orderStates[0]['id_order_state']
 ?>

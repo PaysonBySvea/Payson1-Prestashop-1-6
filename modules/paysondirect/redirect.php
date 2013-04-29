@@ -1,12 +1,17 @@
 <?php
 
-include(dirname(__FILE__) . '/../../config/config.inc.php');
-include(dirname(__FILE__) . '/../../init.php');
-include(dirname(__FILE__) . '/paysondirect.php');
+include_once(dirname(__FILE__) . '/../../config/config.inc.php');
+include_once(dirname(__FILE__) . '/../../init.php');
+include_once(dirname(__FILE__) . '/paysondirect.php');
 
-include(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+
+include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+
 
 $payson = new Paysondirect();
+
+
+
 $cart = new Cart(intval($cookie->id_cart));
 
 $address = new Address(intval($cart->id_address_invoice));
@@ -53,10 +58,9 @@ if ($currency_order->id != $currency_module['id_currency']) {
     $cart->id_currency = $currency_module['id_currency'];
     $cart->update();
 }
-
 $currencyCode = $currency_module['iso_code'];
 
-$extracost = 1;
+
 $amount = floatval($cart->getOrderTotal(true, 3));
 
 if ($isInvoicePurchase)
@@ -73,68 +77,55 @@ $trackingId = time();
 $customer = array('name' => $customer->firstname, 'lastname' => $customer->lastname, 'mail' => $customer->email);
 
 $paysonUrl = array(
-    'returnUrl' => "http://" . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId,
+    'returnUrl' => "http://" . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart_id,
     'ipnNotificationUrl' => "http://" . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart_id,
     'cancelUrl' => "http://" . $url . "index.php?controller=order"
 );
 
 $productInfo = array('amount' => $amount, 'fee' => $payson->paysonInvoiceFee(), 'orderitemslist' => orderItemsList($cart));
 
-
 $shopInfo = array(
     'shopName' => Configuration::get('PS_SHOP_NAME'),
     'localeCode' => Language::getIsoById($cookie->id_lang),
     'currencyCode' => $currency_module['iso_code']
 );
-$moduleVersionToTracking = 'payson_prestashop|' . $payson->version . '_1.5|' . _PS_VERSION_;
 
-$sandbox = 0;
-if (Configuration::get('PAYSON_MODE') == 'sandbox')
-    paysonApiSandbox($paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking, $isInvoicePurchase, $payson);
-else
-    paysonApi($customer, $paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking, $isInvoicePurchase, $payson);
+$api = $payson->getAPIInstance();
 
 
-/*
- * @return void
- * @param array $paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking
- * @disc the function request and redirect Payson API
- */
-
-function paysonApi($customer, $paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking, $isInvoicePurchase = FALSE, $payson) {
-    include(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapi.php');
-
-    $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_AGENTID')), trim(Configuration::get('PAYSON_MD5KEY')), null, $moduleVersionToTracking);
-    $api = new PaysonApi($credentials);
-
+if ($payson->testMode) {
+    $receiver = new Receiver('testagent-1@payson.se', $productInfo['amount']);
+    $sender = new Sender(Configuration::get('PAYSON_SANDBOX_CUSTOMER_EMAIL'), 'name', 'lastname');
+} else {
     $receiver = new Receiver(trim(Configuration::get('PAYSON_EMAIL')), $productInfo['amount']);
-    $receivers = array($receiver);
     $sender = new Sender(trim($customer['mail']), trim($customer['name']), trim($customer['lastname']));
-    $payData = new PayData($paysonUrl['returnUrl'], $paysonUrl['cancelUrl'], $paysonUrl['ipnNotificationUrl'], $shopInfo['shopName'], $sender, $receivers);
-    $payData->setCurrencyCode($shopInfo['currencyCode']);
-    $payData->setLocaleCode($shopInfo['localeCode']);
-    $payData->setTrackingId(time());
+}
+$receivers = array($receiver);
 
-    $constraints = $isInvoicePurchase ? $constraints = array(FundingConstraint::INVOICE) : array(Configuration::get('PAYSON_PAYMENTMETHODS'));
-    $payData->setFundingConstraints($constraints);
+$payData = new PayData($paysonUrl['returnUrl'], $paysonUrl['cancelUrl'], $paysonUrl['ipnNotificationUrl'], $shopInfo['shopName'], $sender, $receivers);
+$payData->setCurrencyCode($shopInfo['currencyCode']);
+$payData->setLocaleCode($shopInfo['localeCode']);
+$payData->setTrackingId(time());
 
-    $payData->setOrderItems($productInfo['orderitemslist']);
-    if ($isInvoicePurchase)
-        $payData->setInvoiceFee($productInfo['fee']);
-    $payData->setGuaranteeOffered('NO');
-    $payResponse = $api->pay($payData);
-    if ($payResponse->getResponseEnvelope()->wasSuccessful()) {  //ack = SUCCESS och token  = token = N�got
-        //return the url: https://www.payson.se/paysecure/?token=#
-        header("Location: " . $api->getForwardPayUrl($payResponse));
-    } else {
-        $error = $payResponse->getResponseEnvelope()->getErrors();
-        if (Configuration::get('PAYSON_LOGS') == 'yes') {
-            $message = '<Payson Direct api>' . $error[0]->getErrorId() . '***' . $error[0]->getMessage() . '***' . $error[0]->getParameter();
-            Logger::addLog($message, 1, NULL, NULL, NULL, true);
-        }
-        $payson->paysonApiError($error[0]->getMessage().' Please try using a different payment method.');
-        //Tools::redirectLink('order.php?$message=' . $error[0]->getMessage());
+$constraints = $isInvoicePurchase ? $constraints = array(FundingConstraint::INVOICE) : array(Configuration::get('PAYSON_PAYMENTMETHODS'));
+$payData->setFundingConstraints($constraints);
+
+$payData->setOrderItems($productInfo['orderitemslist']);
+if ($isInvoicePurchase)
+    $payData->setInvoiceFee($productInfo['fee']);
+
+$payData->setGuaranteeOffered('NO');
+
+$payResponse = $api->pay($payData);
+if ($payResponse->getResponseEnvelope()->wasSuccessful()) {  //ack = SUCCESS och token  = token = N�got
+    header("Location: " . $api->getForwardPayUrl($payResponse));
+} else {
+    $error = $payResponse->getResponseEnvelope()->getErrors();
+    if (Configuration::get('PAYSON_LOGS') == 'yes') {
+        $message = '<Payson Direct api>' . $error[0]->getErrorId() . '***' . $error[0]->getMessage() . '***' . $error[0]->getParameter();
+        Logger::addLog($message, 1, NULL, NULL, NULL, true);
     }
+    $payson->paysonApiError($error[0]->getMessage() . ' Please try using a different payment method.');
 }
 
 /*
@@ -142,43 +133,6 @@ function paysonApi($customer, $paysonUrl, $productInfo, $shopInfo, $moduleVersio
  * @param array $paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking
  * @disc the function request and redirect Payson API Sandbox
  */
-
-function paysonApiSandbox($paysonUrl, $productInfo, $shopInfo, $moduleVersionToTracking, $isInvoicePurchase = FALSE, $payson) {
-    include(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapiTest.php');
-
-    $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_SANDBOX_AGENTID')), trim(Configuration::get('PAYSON_SANDBOX_MD5KEY')), null, $moduleVersionToTracking);
-    $api = new PaysonApi($credentials);
-
-    $receiver = new Receiver('testagent-1@payson.se', $productInfo['amount']);
-    $receivers = array($receiver);
-    $sender = new Sender(Configuration::get('PAYSON_SANDBOX_CUSTOMER_EMAIL'), 'name', 'lastname');
-    $payData = new PayData($paysonUrl['returnUrl'], $paysonUrl['cancelUrl'], $paysonUrl['ipnNotificationUrl'], $shopInfo['shopName'], $sender, $receivers);
-    $payData->setCurrencyCode($shopInfo['currencyCode']);
-    $payData->setLocaleCode($shopInfo['localeCode']);
-    $payData->setTrackingId(time());
-
-    $constraints = $isInvoicePurchase ? $constraints = array(FundingConstraint::INVOICE) : array(Configuration::get('PAYSON_PAYMENTMETHODS'));
-    $payData->setFundingConstraints($constraints);
-
-    $payData->setOrderItems($productInfo['orderitemslist']);
-    if ($isInvoicePurchase)
-        $payData->setInvoiceFee($productInfo['fee']);
-    $payData->setGuaranteeOffered('NO');
-
-    $payResponse = $api->pay($payData);
-    if ($payResponse->getResponseEnvelope()->wasSuccessful()) {  //ack = SUCCESS och token  = token = N�got
-        //return the url: https://www.payson.se/paysecure/?token=#
-        header("Location: " . $api->getForwardPayUrl($payResponse));
-    } else {
-        $error = $payResponse->getResponseEnvelope()->getErrors();
-        if (Configuration::get('PAYSON_LOGS') == 'yes') {
-            $message = '<Payson Direct api>' . $error[0]->getErrorId() . '***' . $error[0]->getMessage() . '***' . $error[0]->getParameter();
-            Logger::addLog($message, 1, NULL, NULL, NULL, true);
-        }
-        $payson->paysonApiError($error[0]->getMessage(). ' Please try using a different payment method.');
-        //Tools::redirectLink('order.php?$message=' . $error[0]->getMessage());
-    }
-}
 
 /*
  * @return product list
@@ -188,7 +142,7 @@ function paysonApiSandbox($paysonUrl, $productInfo, $shopInfo, $moduleVersionToT
 
 function orderItemsList($cart) {
 
-    include(_PS_MODULE_DIR_ . 'paysondirect/payson/orderitem.php');
+    include_once(_PS_MODULE_DIR_ . 'paysondirect/payson/orderitem.php');
 
     $orderitemslist = array();
     foreach ($cart->getProducts() AS $cartProduct) {
@@ -198,15 +152,11 @@ function orderItemsList($cart) {
         $attributes_small = isset($cartProduct['attributes_small']) ? $cartProduct['attributes_small'] : '';
 
         $orderitemslist[] = new OrderItem(
-                        $cartProduct['name'] . '  ' . $attributes_small,
-                        number_format($product_price, 2, '.', ''),
-                        $cartProduct['cart_quantity'],
-                        number_format($my_taxrate, 3, '.', ''),
-                        $cartProduct['id_product']
+                $cartProduct['name'] . '  ' . $attributes_small, number_format($product_price, 2, '.', ''), $cartProduct['cart_quantity'], number_format($my_taxrate, 3, '.', ''), $cartProduct['id_product']
         );
     }
 
-    // check four discounts
+// check four discounts
     $cartDiscounts = $cart->getDiscounts();
 
     /*
@@ -222,11 +172,7 @@ function orderItemsList($cart) {
         $value = $objDiscount->getValue(sizeof($cartDiscounts), $cart->getOrderTotal(true, 1), $cart->getTotalShippingCost(), $cart->id);
 
         $orderitemslist[] = new OrderItem(
-                        $cartDiscount['name'],
-                        number_format(-$value, 2, '.', ''),
-                        1,
-                        0,
-                        'Rabatt'
+                $cartDiscount['name'], number_format(-$value, 2, '.', ''), 1, 0, 'Rabatt'
         );
     }
 
@@ -234,7 +180,7 @@ function orderItemsList($cart) {
 
     if ($total_shipping_wt > 0) {
         $carrier = new Carrier($cart->id_carrier, $cart->id_lang);
-        
+
         $carriertax = Tax::getCarrierTaxRate((int) $carrier->id, $cart->id_address_invoice);
         $carriertax_rate = $carriertax / 100;
 
@@ -242,16 +188,13 @@ function orderItemsList($cart) {
         $total_shipping_wot = $total_shipping_wt / $forward_vat;
 
         $orderitemslist[] = new OrderItem(
-                        isset($carrier->name) ? $carrier->name : 'shipping',
-                        number_format($total_shipping_wot, 2, '.', ''),
-                        1,
-                        number_format($carriertax_rate, 2, '.', ''),
-                        9998
+                isset($carrier->name) ? $carrier->name : 'shipping', number_format($total_shipping_wot, 2, '.', ''), 1, number_format($carriertax_rate, 2, '.', ''), 9998
         );
     }
 
 
     return $orderitemslist;
 }
+
 //ready, -----------------------------------------------------------------------
 ?>

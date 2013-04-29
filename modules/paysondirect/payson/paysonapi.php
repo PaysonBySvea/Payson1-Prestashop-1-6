@@ -126,11 +126,12 @@ class GuaranteeOffered {
 class PaysonApi {
 
     protected $credentials;
+    protected $testMode;
 
-    const PAYSON_WWW_HOST = "https://www.payson.se";
+    var $PAYSON_WWW_HOST = "https://%swww.payson.se";
     const PAYSON_WWW_PAY_FORWARD_URL = "/paysecure/?token=%s";
 
-    const PAYSON_API_ENDPOINT = "https://api.payson.se";
+    var $PAYSON_API_ENDPOINT = "https://%sapi.payson.se";
     const PAYSON_API_VERSION = "1.0";
     const PAYSON_API_PAY_ACTION = "Pay";
     const PAYSON_API_PAYMENT_DETAILS_ACTION = "PaymentDetails";
@@ -142,11 +143,23 @@ class PaysonApi {
      *
      * @param PaysonCredentials $credentials
      */
-    public function __construct($credentials){
+    public function __construct($credentials, $testMode = false){
         if(get_class($credentials) != "PaysonCredentials") {
             throw new PaysonApiException("Parameter must be of type PaysonCredentials");
         }
         $this->credentials = $credentials;
+        $this->testMode = $testMode;
+        
+        if($this->testMode)
+        {
+            $this->PAYSON_WWW_HOST = sprintf($this->PAYSON_WWW_HOST, "test-");
+            $this->PAYSON_API_ENDPOINT = sprintf($this->PAYSON_API_ENDPOINT, "test-");
+        }
+        else
+        {
+            $this->PAYSON_WWW_HOST = sprintf($this->PAYSON_WWW_HOST, "");
+            $this->PAYSON_API_ENDPOINT = sprintf($this->PAYSON_API_ENDPOINT, "");
+        }
     }
 
     /**
@@ -251,7 +264,7 @@ class PaysonApi {
      * @return string The URL to forward to
      */
     public function getForwardPayUrl($payResponse){
-        return self::PAYSON_WWW_HOST . sprintf(self::PAYSON_WWW_PAY_FORWARD_URL, $payResponse->getToken());
+        return self::$this->PAYSON_WWW_HOST . sprintf(self::PAYSON_WWW_PAY_FORWARD_URL, $payResponse->getToken());
     }
 
     private function doRequest($url, $credentials, $postData) {
@@ -268,7 +281,7 @@ class PaysonApi {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $credentials->toHeader());
-        curl_setopt($ch, CURLOPT_URL, self::PAYSON_API_ENDPOINT .  $url);
+        curl_setopt($ch, CURLOPT_URL, self::$this->PAYSON_API_ENDPOINT .  $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);

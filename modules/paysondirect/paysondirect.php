@@ -1,13 +1,18 @@
 <?php
 
-//include_once(_PS_MODULE_DIR_.'paysoninvoice/payson_api/functions.payson.php');
-//include(_PS_MODULE_DIR_.'paysondirect/payson_api/functions.payson.php');
+if (!isset($_SESSION)) {
+    session_start();
+}
+
+include_once(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapi.php');
 
 class Paysondirect extends PaymentModule {
 
     private $_html = '';
     private $_postErrors = array();
     private $invoiceAmountMinLimit = 30;
+    private $MODULE_VERSION;
+    public $testMode;
 
     public function __construct() {
         $this->name = 'paysondirect';
@@ -18,6 +23,9 @@ class Paysondirect extends PaymentModule {
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
         $this->currencies_mode = 'checkbox';
 
+        $this->MODULE_VERSION = sprintf('payson_prestashop|%s|%s', $this->version, _PS_VERSION_);
+        $this->testMode = Configuration::get('PAYSON_MODE') == 'sandbox';
+
         parent::__construct();
 
         $this->page = basename(__FILE__, '.php');
@@ -27,34 +35,83 @@ class Paysondirect extends PaymentModule {
     }
 
     public function install() {
-        include(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+        include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
         $table_name_order_events = _DB_PREFIX_ . $paysonDbTableOrderEvents;
         $q = $this->paysonCreateTransOrderEventsTableQuery($table_name_order_events);
 
         $db = Db::getInstance();
-        $result = $db->Execute($q);
 
-        if (!parent::install()
-                OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL'))
-                OR !Configuration::updateValue('PAYSON_AGENTID', '')
-                OR !Configuration::updateValue('PAYSON_MD5KEY', '')
-                OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se')
-                OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1')
-                OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a')
-                OR !Configuration::updateValue('PAYSON_PAYMENTMETHODS', 'all')
-                OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0')
-                OR !Configuration::updateValue('PAYSON_MODE', 'sandbox')
-                OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO')
-                OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version)
-                OR !Configuration::updateValue('PAYSON_LOGS', 'no')
-                OR !$this->registerHook('payment')
-                OR !$this->registerHook('paymentReturn'))
+        $db->Execute($q);
+
+        $db->insert("order_state", array(
+            "id_order_state" => "null",
+            "invoice" => "0",
+            "send_email" => "0",
+            "module_name" => "payson",
+            "color" => "DarkBlue",
+            "unremovable" => "0",
+            "hidden" => "0",
+            "logable" => "0",
+            "delivery" => "0",
+            "shipped" => "0",
+            "paid" => "1",
+            "deleted" => "0"));
+
+        $paysonPaidId = $db->Insert_ID();
+
+        $languages = $db->executeS("SELECT id_lang, iso_code FROM " . _DB_PREFIX_ . "lang WHERE iso_code IN('sv','en','fi')");
+
+        foreach ($languages as $language) {
+            switch ($language['iso_code']) {
+                case 'sv':
+
+
+                    $db->insert('order_state_lang', array(
+                        "id_order_state" => pSQL($paysonPaidId),
+                        "id_lang" => pSQL($language['id_lang']),
+                        "name" => "Betald med Payson",
+                        "template" => "payment"
+                    ));
+                    break;
+
+                case 'en':
+                    
+                    $db->insert('order_state_lang', array(
+                        "id_order_state" => pSQL($paysonPaidId),
+                        "id_lang" => pSQL($language['id_lang']),
+                        "name" => "Paid with Payson",
+                        "template" => "payment"
+                    ));
+                    break;
+
+                case 'fi':
+
+                    $db->insert('order_state_lang', array(
+                        "id_order_state" => pSQL($paysonPaidId),
+                        "id_lang" => pSQL($language['id_lang']),
+                        "name" => "Maksettu Paysonilla",
+                        "template" => "payment"
+                    ));
+                    break;
+            }
+        }
+
+        if (!parent::install() OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('PAYSON_PAYMENTMETHODS', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
         return true;
     }
 
     public function uninstall() {
+
+        $db = Db::getInstance();
+        $orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='payson'");
+
+        foreach ($orderStates as $orderState) {
+            $db->delete("order_state", "id_order_state = " . pSQL($orderState['id_order_state']));
+            $db->delete("order_state_lang", "id_order_state = " . pSQL($orderState['id_order_state']));
+        }
+
         return (parent::uninstall() AND
                 Configuration::deleteByName('PAYSON_EMAIL') AND
                 Configuration::deleteByName('PAYSON_AGENTID') AND
@@ -133,7 +190,7 @@ class Paysondirect extends PaymentModule {
 
     public function displayPayson() {
         global $cookie;
-        include(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+        include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
 
         $this->_html .= '
@@ -151,7 +208,7 @@ class Paysondirect extends PaymentModule {
                     'PAYSON_EMAIL',
                     'PAYSON_PAYMENTMETHODS',
                     'PAYSON_INVOICE_ENABLED'
-                ));
+        ));
 
         $payson_mode_text = 'Currently using <strong>' . Configuration::get('PAYSON_MODE') . '</strong> mode.';
 
@@ -217,7 +274,7 @@ class Paysondirect extends PaymentModule {
 				</select><br />
 				' . $this->l('You can find your logs in Admin | Advanced Parameter -> Logs.') . '
 				<br /><br />
-                                ' . $this->l('Current invoice fee incl. VAT: ') .  htmlentities($this->paysonInvoiceFee(), ENT_COMPAT, 'UTF-8') . '<br /><br /><br />
+                                ' . $this->l('Current invoice fee incl. VAT: ') . htmlentities($this->paysonInvoiceFee(), ENT_COMPAT, 'UTF-8') . '<br /><br /><br />
 
 				<strong>' . $this->l('Instructions for the invoice fee:') . '</strong><br /><br />
 				' . $this->l('The module retrives the invoice fee as a product from your webshop. You have to create a product with a specific reference called "PS_FA".') . '<br /><br />
@@ -243,16 +300,17 @@ class Paysondirect extends PaymentModule {
             return;
         if (!$this->_checkCurrency($params['cart']))
             return;
-        
+
         $paysonInvoiceFee = $this->paysonInvoiceFee();
-        
-        if ($params['cart']->getOrderTotal(true, Cart::BOTH) >= $this->invoiceAmountMinLimit){
+
+        if ($params['cart']->getOrderTotal(true, Cart::BOTH) >= $this->invoiceAmountMinLimit) {
             $smarty->assign('paysonInvoiceAmountMinLimit', true);
-        }else
-            $smarty->assign('paysonInvoiceAmountMinLimit', false);    
+        }
+        else
+            $smarty->assign('paysonInvoiceAmountMinLimit', false);
 
         $smarty->assign('paysonInvoiceFee', number_format($paysonInvoiceFee, 2, '.', ','));
-        
+
         return $this->display(__FILE__, 'paysondirect.tpl');
     }
 
@@ -264,7 +322,7 @@ class Paysondirect extends PaymentModule {
     }
 
     public function getL($key) {
-        include(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+        include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
         $translations = array(
             'Your seller e-mail' => $this->l('Your seller e-mail'),
@@ -348,21 +406,101 @@ class Paysondirect extends PaymentModule {
         else
             return null;
     }
-    
-	public function paysonApiError($error) {
-			$error_code = '<html>
-								<head>
-									<script type="text/javascript"> 
-										alert("'.$error.'");
-										window.location="'.('/index.php?controller=order').'";
-									</script>
-								</head>
-						</html>';
-			echo $error_code;
-			exit;
-			
-	}
+
+    public function paysonApiError($error) {
+        $error_code = '<html>
+				<head>
+                                    <script type="text/javascript"> 
+                                        alert("' . $error . '");
+                                        window.location="' . ('/index.php?controller=order') . '";
+                                    </script>
+				</head>
+			</html>';
+        echo $error_code;
+        exit;
+    }
+
+    public function getAPIInstance() {
+
+        if ($this->testMode) {
+            $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_SANDBOX_AGENTID')), trim(Configuration::get('PAYSON_SANDBOX_MD5KEY')), null, $this->MODULE_VERSION);
+        } else {
+            $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_AGENTID')), trim(Configuration::get('PAYSON_MD5KEY')), null, $this->MODULE_VERSION);
+        }
+
+        $api = new PaysonApi($credentials, $this->testMode);
+
+        return $api;
+    }
+
+    public function CreateOrder($cart_id, $token, $ipnResponse = NULL) {
+        global $cookie;
+
+        $cart = new Cart($cart_id);
+
+        if ($cart->OrderExists() == false) {
+            $customer = new Customer($cart->id_customer);
+            $currency = new Currency($cookie->id_currency);
+            $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+
+            $api = $this->getAPIInstance();
+
+            // If we are returning from from checkout we check payment details
+            // to verify the status of this order. Otherwise if it is a IPN call
+            // we do not have to get the details again as we have all the details in 
+            // the IPN response
+            if ($ipnResponse === NULL)
+                $paymentDetails = $api->paymentDetails(new PaymentDetailsData($token))->getPaymentDetails();
+            else
+                $paymentDetails = $ipnResponse;
+
+            if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
+
+                if (!Validate::isLoadedObject($customer))
+                    Tools::redirect('index.php?controller=order&step=1');
+
+                $this->validateOrder((int) $cart->id, $_SESSION["_PS_OS_PAYSON_PAID"], $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
+
+                $order = new Order($this->currentOrder);
+                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
+            }elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
+
+                //since this in an invoice, we need to create shippingadress
+                $address = new Address(intval($cart->id_address_delivery));
+                $address->firstname = $paymentDetails->getShippingAddressName();
+                $address->lastname = ' ';
+                $address->address1 = $paymentDetails->getShippingAddressStreetAddress();
+                $address->address2 = '';
+                $address->city = $paymentDetails->getShippingAddressCity();
+                $address->postcode = $paymentDetails->getShippingAddressPostalCode();
+                $address->country = $paymentDetails->getShippingAddressCountry();
+                $address->id_customer = $cart->id_customer;
+                $address->alias = "Payson account address";
+
+                $address->update();
+
+                // Fetch the invoice fee from the database and update the
+                // order
+                $invoicefee = Db::getInstance()->getRow("SELECT id_product FROM " . _DB_PREFIX_ . "product WHERE reference = 'PS_FA'");
+                Db::getInstance()->Execute('INSERT INTO ' . _DB_PREFIX_ . 'cart_product (id_cart, id_product, id_product_attribute, quantity, date_add) VALUES(' . $cart->id . ',' . intval($invoicefee['id_product']) . ',0,1,\'' . pSql(date('Y-m-d h:i:s')) . '\')');
+
+                $this->validateOrder((int) $cart->id, $_SESSION["_PS_OS_PAYSON_PAID"], $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
+                $order = new Order($this->currentOrder);
+                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
+            } elseif ($paymentDetails->getStatus() == 'ERROR') {
+                $customer = new Customer($cart->id_customer);
+
+                $this->validateOrder((int) $cart->id, _PS_OS_CANCELED_, $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '   ' . $this->l('Order denied.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
+                //Tools::redirectLink('history.php');
+                $this->paysonApiError('The payment was denied. Please try using a different payment method.');
+            } else {
+                $this->validateOrder((int) $cart->id, _PS_OS_ERROR_, 0, $this->displayName, $this->l('The transaction could not be completed.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
+                Tools::redirectLink('history.php');
+            }
+        }
+    }
 
 }
+
 //end class
 ?>

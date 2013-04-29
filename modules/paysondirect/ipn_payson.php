@@ -6,7 +6,7 @@
  * @package paymentMethod
  * @copyright Copyright 2012 Payson
  */
-include(dirname(__FILE__) . '/../../config/config.inc.php');
+include_once(dirname(__FILE__) . '/../../config/config.inc.php');
 /*
  * @return void
  * @param int $id_cart
@@ -15,20 +15,19 @@ include(dirname(__FILE__) . '/../../config/config.inc.php');
 paysonIpn();
 
 function paysonIpn() {
-    $postData = file_get_contents("php://input");
+    include_once(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapi.php');
+    include_once(_PS_MODULE_DIR_ . 'paysondirect/paysondirect.php');
 
-    if (Configuration::get('PAYSON_MODE') == 'sandbox') {
-        include(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapiTest.php');
-        $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_SANDBOX_AGENTID')), trim(Configuration::get('PAYSON_SANDBOX_MD5KEY')), null);
-    } else {
-        include(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapi.php');
-        $credentials = new PaysonCredentials(trim(Configuration::get('PAYSON_AGENTID')), trim(Configuration::get('PAYSON_MD5KEY')), null);
-    }
-    $api = new PaysonApi($credentials);
+    $postData = file_get_contents("php://input");
+    
+    $cart = new Cart(intval($_GET["id_cart"])); 
+        
+    $payson = new Paysondirect();
+
+    $api = $payson->getAPIInstance();
 
     // Validate the request
     $response = $api->validate($postData);
-
 
     if ($response->isVerified()) {
 
@@ -62,13 +61,9 @@ function paysonIpn() {
 
 
         createPaysonOrderEvents($ipn_respons);
-
-        if ($response->getPaymentDetails()->getType() == "INVOICE") {
-            $invoicefee = Db::getInstance()->getRow("SELECT id_product FROM " . _DB_PREFIX_ . "product WHERE reference = 'PS_FA'");
-
-            Db::getInstance()->Execute('INSERT INTO ' . _DB_PREFIX_ . 'cart_product (id_cart, id_product, id_product_attribute, quantity, date_add) VALUES(' . intval($_GET["id_cart"]) . ',' . intval($invoicefee['id_product']) . ',0,1,\'' . pSql(date('Y-m-d h:i:s')) . '\')');
-            $cart = new Cart((int) $_GET["id_cart"]);
-        }
+        
+        $payson->CreateOrder($cart, $token, $response->getPaymentDetails());    
+            
     } else {
         if (Configuration::get('PAYSON_LOGS') == 'yes')
             Logger::addLog('<Payson Direct api>The response could not validate.', 1, NULL, NULL, NULL, true);
@@ -82,7 +77,7 @@ function paysonIpn() {
  */
 
 function createPaysonOrderEvents($ipn_respons) {
-    include(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+    include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
     $table_order_events = _DB_PREFIX_ . $paysonDbTableOrderEvents;
     $db3 = Db::getInstance();
 
@@ -98,17 +93,16 @@ function createPaysonOrderEvents($ipn_respons) {
 	  						purchase_id                   = '" . $ipn_respons['purchase_id'] . "',					
 	  						customer                      = '" . $ipn_respons['customer'] . "', 		
 	  						token                         =  '" . $ipn_respons['token'] . "'";
-    
+
     $paysonInvoiceInsert = "";
-	if ($ipn_respons['type'] == "INVOICE"){
-	    $paysonInvoiceInsert = ",invoice_status = '" . $ipn_respons['invoice_status'] . "', 
+    if ($ipn_respons['type'] == "INVOICE") {
+        $paysonInvoiceInsert = ",invoice_status = '" . $ipn_respons['invoice_status'] . "', 
 		  						shippingAddress_name          = '" . $ipn_respons['shippingAddress_name'] . "', 
 		  						shippingAddress_street_ddress = '" . $ipn_respons['shippingAddress_street_ddress'] . "', 
 		  						shippingAddress_postal_code   = '" . $ipn_respons['shippingAddress_postal_code'] . "', 
 		  						shippingAddress_city          = '" . $ipn_respons['shippingAddress_city'] . "', 
 		  						shippingAddress_country       = '" . $ipn_respons['shippingAddress_country'] . "'";
-
-	}
+    }
 
     $q = "INSERT INTO " . $table_order_events . " SET " . $paysonDirectInsert . $paysonInvoiceInsert;
 
