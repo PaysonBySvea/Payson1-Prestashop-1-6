@@ -264,7 +264,7 @@ class PaysonApi {
      * @return string The URL to forward to
      */
     public function getForwardPayUrl($payResponse){
-        return self::$this->PAYSON_WWW_HOST . sprintf(self::PAYSON_WWW_PAY_FORWARD_URL, $payResponse->getToken());
+        return $this->PAYSON_WWW_HOST . sprintf(self::PAYSON_WWW_PAY_FORWARD_URL, $payResponse->getToken());
     }
 
     private function doRequest($url, $credentials, $postData) {
@@ -281,7 +281,7 @@ class PaysonApi {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $credentials->toHeader());
-        curl_setopt($ch, CURLOPT_URL, self::$this->PAYSON_API_ENDPOINT .  $url);
+        curl_setopt($ch, CURLOPT_URL, $this->PAYSON_API_ENDPOINT .  $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
