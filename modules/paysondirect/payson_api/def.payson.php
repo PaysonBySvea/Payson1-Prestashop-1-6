@@ -305,7 +305,10 @@ $paysonDbTableOrderEvents = "payson_order_event";
 
 $db = Db::getInstance();
 
-$orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='payson' ORDER BY id_order_state asc");
+$orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect' ORDER BY id_order_state asc");
 
-$_SESSION["_PS_OS_PAYSON_PAID"] = $orderStates[0]['id_order_state']
+if(count($orderStates) > 0)
+{
+    $_SESSION["_PS_OS_PAYSON_PAID"] = $orderStates[0]['id_order_state'];
+}
 ?>

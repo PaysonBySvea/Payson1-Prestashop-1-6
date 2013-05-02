@@ -46,20 +46,20 @@ class Paysondirect extends PaymentModule {
 
         $db->insert("order_state", array(
             "id_order_state" => "null",
-            "invoice" => "0",
-            "send_email" => "0",
-            "module_name" => "payson",
-            "color" => "DarkBlue",
-            "unremovable" => "0",
+            "invoice" => "1",
+            "send_email" => "1",
+            "module_name" => "paysondirect",
+            "color" => "Orange",
+            "unremovable" => "1",
             "hidden" => "0",
-            "logable" => "0",
+            "logable" => "1",
             "delivery" => "0",
             "shipped" => "0",
             "paid" => "1",
             "deleted" => "0"));
 
         $paysonPaidId = $db->Insert_ID();
-
+        
         $languages = $db->executeS("SELECT id_lang, iso_code FROM " . _DB_PREFIX_ . "lang WHERE iso_code IN('sv','en','fi')");
 
         foreach ($languages as $language) {
@@ -76,7 +76,7 @@ class Paysondirect extends PaymentModule {
                     break;
 
                 case 'en':
-                    
+
                     $db->insert('order_state_lang', array(
                         "id_order_state" => pSQL($paysonPaidId),
                         "id_lang" => pSQL($language['id_lang']),
@@ -96,6 +96,9 @@ class Paysondirect extends PaymentModule {
                     break;
             }
         }
+        
+        // Add the payson logotype to the order status folder
+        copy(_PS_MODULE_DIR_ . "paysondirect/logo.gif", "../img/os/" . $paysonPaidId . ".gif");
 
         if (!parent::install() OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('PAYSON_PAYMENTMETHODS', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
@@ -105,7 +108,7 @@ class Paysondirect extends PaymentModule {
     public function uninstall() {
 
         $db = Db::getInstance();
-        $orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='payson'");
+        $orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect'");
 
         foreach ($orderStates as $orderState) {
             $db->delete("order_state", "id_order_state = " . pSQL($orderState['id_order_state']));
@@ -139,10 +142,12 @@ class Paysondirect extends PaymentModule {
                     $this->_postErrors[] = $this->l('Payson Agent Id is required.');
             }
 
-            if ($mode = (Tools::getValue('payson_mode') == 'real' ? 'real' : 'sandbox'))
+            $mode = Tools::getValue('payson_mode');
+            if ($mode == 'real' ? 'real' : 'sandbox')
                 Configuration::updateValue('PAYSON_MODE', $mode);
 
-            if ($logPayson = (Tools::getValue('payson_log') == 'yes' ? 'yes' : 'no'))
+            $logPayson = Tools::getValue('payson_log');
+            if ($logPayson == 'yes' ? 'yes' : 'no')
                 Configuration::updateValue('PAYSON_LOGS', $logPayson);
 
             if (!sizeof($this->_postErrors)) {
@@ -217,14 +222,14 @@ class Paysondirect extends PaymentModule {
         $email = array_key_exists('email', $_POST) ? $_POST['email'] : (array_key_exists('PAYSON_EMAIL', $conf) ? $conf['PAYSON_EMAIL'] : '');
 
         $enableInvoice = array_key_exists('enableInvoice', $_POST) ? $_POST['enableInvoice'] : (array_key_exists('PAYSON_INVOICE_ENABLED', $conf) ? $conf['PAYSON_INVOICE_ENABLED'] : '0');
-
+        
         $this->_html .= '
 		<form action="' . $_SERVER['REQUEST_URI'] . '" method="post" style="clear: both;">
 		<fieldset>
 			<legend><img src="../img/admin/contact.gif" />' . $this->l('Settings') . '</legend>
 	
 				<div class="warn">
-					' . $this->l('Module version' . $this->version) . '
+					' . $this->l('Module version: ') . $this->version .  '
 				</div>
 	
 				<br /><br />
@@ -437,9 +442,10 @@ class Paysondirect extends PaymentModule {
         global $cookie;
 
         $cart = new Cart($cart_id);
+        $customer = new Customer($cart->id_customer);
 
         if ($cart->OrderExists() == false) {
-            $customer = new Customer($cart->id_customer);
+
             $currency = new Currency($cookie->id_currency);
             $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
 
@@ -461,7 +467,6 @@ class Paysondirect extends PaymentModule {
 
                 $this->validateOrder((int) $cart->id, $_SESSION["_PS_OS_PAYSON_PAID"], $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
 
-                $order = new Order($this->currentOrder);
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             }elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
 
@@ -485,7 +490,7 @@ class Paysondirect extends PaymentModule {
                 Db::getInstance()->Execute('INSERT INTO ' . _DB_PREFIX_ . 'cart_product (id_cart, id_product, id_product_attribute, quantity, date_add) VALUES(' . $cart->id . ',' . intval($invoicefee['id_product']) . ',0,1,\'' . pSql(date('Y-m-d h:i:s')) . '\')');
 
                 $this->validateOrder((int) $cart->id, $_SESSION["_PS_OS_PAYSON_PAID"], $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
-                $order = new Order($this->currentOrder);
+
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getStatus() == 'ERROR') {
                 $customer = new Customer($cart->id_customer);
@@ -497,9 +502,16 @@ class Paysondirect extends PaymentModule {
                 $this->validateOrder((int) $cart->id, _PS_OS_ERROR_, 0, $this->displayName, $this->l('The transaction could not be completed.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 Tools::redirectLink('history.php');
             }
+        } else {
+            // No point of redirecting if it is the IPN call
+            if ($ipnResponse)
+                return;
+
+            $order = Order::getOrderByCartId($cart->id);
+
+            Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
         }
     }
-
 }
 
 //end class

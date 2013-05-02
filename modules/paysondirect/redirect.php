@@ -1,27 +1,23 @@
 <?php
-
+global $cookie;
 include_once(dirname(__FILE__) . '/../../config/config.inc.php');
 include_once(dirname(__FILE__) . '/../../init.php');
 include_once(dirname(__FILE__) . '/paysondirect.php');
-
-
 include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
-
 $payson = new Paysondirect();
-
-
 
 $cart = new Cart(intval($cookie->id_cart));
 
 $address = new Address(intval($cart->id_address_invoice));
-$country = new Country(intval($address->id_country));
+
 $state = NULL;
+
 if ($address->id_state)
     $state = new State(intval($address->id_state));
 $customer = new Customer(intval($cart->id_customer));
 
-$email = Configuration::get('PAYSON_EMAIL');
+$receiverEmail = Configuration::get('PAYSON_EMAIL');
 
 $invoiceEnabled = Configuration::get('PAYSON_INVOICE_ENABLED') == 1;
 $isInvoicePurchase = isset($_GET["method"]) && ($_GET["method"] == "invoice");
@@ -29,7 +25,7 @@ $isInvoicePurchase = isset($_GET["method"]) && ($_GET["method"] == "invoice");
 if ($isInvoicePurchase && !$invoiceEnabled)
     die('Cant pay with invoice when invoice isnt enabled');
 
-if (!Validate::isEmail($email))
+if (!Validate::isEmail($receiverEmail))
     die($payson->getL('Payson error: (invalid or undefined business account email)'));
 
 if (!Validate::isLoadedObject($address))
@@ -58,31 +54,23 @@ if ($currency_order->id != $currency_module['id_currency']) {
     $cart->id_currency = $currency_module['id_currency'];
     $cart->update();
 }
-$currencyCode = $currency_module['iso_code'];
-
 
 $amount = floatval($cart->getOrderTotal(true, 3));
 
 if ($isInvoicePurchase)
     $amount += $payson->paysonInvoiceFee();
 
-
 $url = Tools::getHttpHost(false, true) . __PS_BASE_URI__;
-$cart_id = intval($cart->id);
-$payson_id = intval($payson->id);
 
-// start------------------------------------------------------------------------------------------
 $trackingId = time();
 
-$customer = array('name' => $customer->firstname, 'lastname' => $customer->lastname, 'mail' => $customer->email);
-
 $paysonUrl = array(
-    'returnUrl' => "http://" . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart_id,
-    'ipnNotificationUrl' => "http://" . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart_id,
+    'returnUrl' => "http://" . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart->id,
+    'ipnNotificationUrl' => "http://" . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart->id,
     'cancelUrl' => "http://" . $url . "index.php?controller=order"
 );
 
-$productInfo = array('amount' => $amount, 'fee' => $payson->paysonInvoiceFee(), 'orderitemslist' => orderItemsList($cart));
+$orderItems = orderItemsList($cart);
 
 $shopInfo = array(
     'shopName' => Configuration::get('PS_SHOP_NAME'),
@@ -92,27 +80,26 @@ $shopInfo = array(
 
 $api = $payson->getAPIInstance();
 
-
 if ($payson->testMode) {
-    $receiver = new Receiver('testagent-1@payson.se', $productInfo['amount']);
+    $receiver = new Receiver('testagent-1@payson.se', $amount);
     $sender = new Sender(Configuration::get('PAYSON_SANDBOX_CUSTOMER_EMAIL'), 'name', 'lastname');
 } else {
-    $receiver = new Receiver(trim(Configuration::get('PAYSON_EMAIL')), $productInfo['amount']);
-    $sender = new Sender(trim($customer['mail']), trim($customer['name']), trim($customer['lastname']));
+    $receiver = new Receiver($receiverEmail, $amount);
+    $sender = new Sender(trim($customer->email), trim($customer->firstname), trim($customer->lastname));
 }
 $receivers = array($receiver);
 
 $payData = new PayData($paysonUrl['returnUrl'], $paysonUrl['cancelUrl'], $paysonUrl['ipnNotificationUrl'], $shopInfo['shopName'], $sender, $receivers);
 $payData->setCurrencyCode($shopInfo['currencyCode']);
 $payData->setLocaleCode($shopInfo['localeCode']);
-$payData->setTrackingId(time());
+$payData->setTrackingId($trackingId);
 
 $constraints = $isInvoicePurchase ? $constraints = array(FundingConstraint::INVOICE) : array(Configuration::get('PAYSON_PAYMENTMETHODS'));
 $payData->setFundingConstraints($constraints);
 
-$payData->setOrderItems($productInfo['orderitemslist']);
+$payData->setOrderItems($orderItems);
 if ($isInvoicePurchase)
-    $payData->setInvoiceFee($productInfo['fee']);
+    $payData->setInvoiceFee($payson->paysonInvoiceFee());
 
 $payData->setGuaranteeOffered('NO');
 

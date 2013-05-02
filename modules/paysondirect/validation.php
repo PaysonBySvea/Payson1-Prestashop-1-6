@@ -1,5 +1,4 @@
 <?php
-
 include_once(dirname(__FILE__) . '/../../config/config.inc.php');
 include_once(dirname(__FILE__) . '/paysondirect.php');
 include_once(dirname(__FILE__) . '/../../header.php');
@@ -9,7 +8,6 @@ if (version_compare(_PS_VERSION_, '1.5.0.0 ', '>=')) {
     $cart = $context->cart;
 }
 
-$trackingId = $_GET["trackingId"];
 $token = $_GET["TOKEN"];
 $cart_id = intval($_GET["id_cart"]);
 
