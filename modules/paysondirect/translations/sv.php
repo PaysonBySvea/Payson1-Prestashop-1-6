@@ -25,6 +25,7 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_cb5e100e5a9a3e7f6d1fd9751221528
 $_MODULE['<{paysondirect}prestashop>paysondirect_eda77a1ab9a23b03556f65db132daaa0'] = 'Denna modul gör det möjligt att ta emot betalningar med Payson.';
 $_MODULE['<{paysondirect}prestashop>paysondirect_0f4ae83602d59d527c5177d3e69339fd'] = 'Du måste ansöka om och bli godkänd för betalningar Payson innan du använder modulen.';
 $_MODULE['<{paysondirect}prestashop>paysondirect_f4f70727dc34561dfde1a3c529b6205c'] = 'Inställningar';
+$_MODULE['<{paysondirect}prestashop>paysondirect_3f28194c2ca90f588bb45e3d8dda60f8'] = 'Modulversion: ';
 $_MODULE['<{paysondirect}prestashop>paysondirect_2c5c20c0012a8a419a06183511d967b2'] = 'Välj läget (Produktionsmiljö eller testmiljö)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_2b8d56d00645f630985e534030c09ccb'] = 'Läge';
 $_MODULE['<{paysondirect}prestashop>paysondirect_7f80fcc452c2f1ed2bb51b39d0864df1'] = 'Produktionsmiljö';
@@ -76,10 +77,10 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_dd8c6cb6be266fc48de89abf70a9ddb
 $_MODULE['<{paysondirect}prestashop>paysondirect_f76c58f41b0bd0dcc44f32252544f269'] = 'Payson modulfel: (ogiltig eller ingen emailadress)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_65569f46d612ae5bdb2bfa02bf9d247f'] = 'Payson modulfel: (ogiltigt kunddata)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_ed738e4bbabb44e6873ba0662abc7af9'] = 'Payson modulfel: (ogiltigt adressdata)';
+$_MODULE['<{paysondirect}prestashop>paysondirect_ef8bf7e644ccf5810e5b7c1a3e53a246'] = 'Paysonreferens: ';
+$_MODULE['<{paysondirect}prestashop>paysondirect_278342c8b31437d44bfe929337c43a8c'] = 'Order nekad';
+$_MODULE['<{paysondirect}prestashop>paysondirect_59d581c1734cacc7fd1344ea481221df'] = 'Transaktionen kunde ej slutföras';
 $_MODULE['<{paysondirect}prestashop>paysondirect_78fa60e395e203759f8e33a6d79c7fd5'] = 'Betala med Payson (Visa, Mastercard & Internetbank)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_eed51e16dea8e341cfa87f72a4e2a514'] = 'Betala via Faktura';
 $_MODULE['<{paysondirect}prestashop>paysondirect_2cbcdf9e93ff9e65bd2a6509617cdbcd'] = 'Om du väljer att betala med Paysonfaktura så tillkommer en avgift om ';
 $_MODULE['<{paysondirect}prestashop>paysondirect_12c2d468d04bcb66e1a38cc373e4df87'] = 'Betalningsvillkor är 10 dagar och fakturan kommer att sändas separat med e-post till den e-postadress Du anger. För att betala mot Paysonfaktura måste Du ha fyllt 18 år och vara folkbokförd i Sverige samt godkännas i den kreditprövning som genomförs vid köpet.';
-$_MODULE['<{paysondirect}prestashop>validation_ef8bf7e644ccf5810e5b7c1a3e53a246'] = 'Paysonreferens';
-$_MODULE['<{paysondirect}prestashop>validation_278342c8b31437d44bfe929337c43a8c'] = 'Order nekad';
-$_MODULE['<{paysondirect}prestashop>validation_59d581c1734cacc7fd1344ea481221df'] = 'Transaktionen kunde inte bli slutförd.';
