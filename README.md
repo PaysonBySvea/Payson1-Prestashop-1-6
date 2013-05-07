@@ -1,47 +1,48 @@
-# Payson Prestashop Module
+README
+======
+![PrestaShop](http://www.prestashop.com/images/banners/general/prestashop_728x90.png "PrestaShop")
 
-## Description
+PREPARATION
+--------
 
-Module for Prestashop implementing Payson
+To install PrestaShop, you need a remote web server or on your computer (MAMP), with access to a database like MySQL.
+You'll need access to phpMyAdmin to create a database and to indicate the information in the database in the installer.
 
-## Installation
+If you do not host and unable to create your store, we offer a turnkey store, which lets you create your online store in less than 10 minutes without any technical knowledge.
+We invite you to visit: [http://www.prestabox.com][1]
 
-Copy all files from this repository into yor Prestashop root. 
+INSTALLATION
+--------
 
-### Configuration
+Simply go to your PrestaShop web directory and use installer :-)
+
+If you have any PHP error, perhaps you don't have PHP5 or you need to activate it on your web host.
+Please go to our forum to find pre-installation settings (PHP 5, htaccess) for certain hosting services (1&1, Free, Lycos, OVH, Infomaniak, Amen, GoDaddy, etc).
+
+English webhost [specifics settings][2]
 
 
-Log into your web shop Administration Panel. 
-Go to Modules -> Payment & Geteways -> Payson vXX and click Install.
-Go to Modules -> Payment & Geteways -> Payson vXX and click Configure (You
-do not need to configure the module by sandbox).
-Enter your Email, Agent ID, MD5 Key and payment method. Click save.
+If you don't find any solution to launch installer, please post on [our forum][3]
 
-#### Payson Faktura:
-Enable Payson Invoice (Only if you have a contract for Payson Invoice).
 
-The module retrives the invoice fee as a product from your webshop. You have to
-create a product with a specific reference called "PS_FA".
+There are always solutions for your issues ;-)
 
-* Go to catalog-> product in your admin.
-* Click Add new.
-* Enter the name, Reference, price, tax, status (Disabled) and save the product.
+DOCUMENTATION
+--------
 
-Retail price with tax must be in the range 0 to 40 SEK.
-Tax must be 25 %
+For any extra documentation (how-to), please read our [Online documentation][4]
 
-## Upgrade
 
-You should have a backup of your web store and database.
-Log into your web shop Administration Panel. 
-Go to Modules -> Payment & Geteways -> Payson vXX and click Uninstall.
-Go to Modules -> Payment & Geteways -> Payson vXX and click Delete.
-Go to Installation in this document.
+FORUMS
+--------
 
-## Usage
+You can also discuss, help and contribute with PrestaShop community on [our forums][5]
 
-If you only are interested to use this module in your store, please download it from [our homepage](https://www.payson.se/integration/moduler/prestashop)
 
-## Contributing
+Thanks for downloading and using PrestaShop e-commerce Open-source solution!
 
-Issue pull requests or send feature requests.
+[1]: http://www.prestabox.com
+[2]: http://www.prestashop.com/forums/topic/2946-pre-installation-settings-php-5-htaccess-for-certain-hosting-services/
+[3]: http://www.prestashop.com/forums/forum/7-installing-prestashop/
+[4]: http://doc.prestashop.com
+[5]: http://www.prestashop.com/forums/
