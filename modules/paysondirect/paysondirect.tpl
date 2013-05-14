@@ -13,7 +13,8 @@
        </a>
    </p>  
    {l s='If you choose to pay by Paysoninvoice so there is a fee incl. VAT' mod='paysondirect'}<strong>{$paysonInvoiceFee} SEK </strong>.
-   {l s='Payment terms are 10 days and the invoice will be sent separately by email to the email address you specify. To pay by Paysoninvoice You must be 18 years old and be registered in Sweden as well as authorized in the credit assessment carried out at purchase.'}<br />        
+   {l s='Payment terms are 10 days and the invoice will be sent separately by email to the email address you specify' mod='paysondirect'}. 
+   {l s='To pay by Paysoninvoice You must be 18 years old and be registered in Sweden as well as authorized in the credit assessment carried out at purchase' mod='paysondirect'}.<br />        
  {/if}
    
    

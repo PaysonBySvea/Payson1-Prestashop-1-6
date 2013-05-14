@@ -10,8 +10,7 @@ class Receiver {
 
     const FORMAT_STRING = "receiverList.receiver(%d).%s";
 
-    public function __construct($email, $amount, $firstName = null, $lastName = null, $isPrimary = true)
-    {
+    public function __construct($email, $amount, $firstName = null, $lastName = null, $isPrimary = true) {
         $this->email = $email;
         $this->amount = $amount;
         $this->firstName = $firstName;
@@ -19,33 +18,28 @@ class Receiver {
         $this->isPrimary = $isPrimary;
     }
 
-    public function getEmail()
-    {
+    public function getEmail() {
         return $this->email;
     }
 
-    public function getAmount()
-    {
+    public function getAmount() {
         return $this->amount;
     }
 
-    public static function parseReceivers($data)
-    {
+    public static function parseReceivers($data) {
         $receivers = array();
 
         $i = 0;
-        while(isset($data[sprintf(self::FORMAT_STRING, $i, "email")])) {
+        while (isset($data[sprintf(self::FORMAT_STRING, $i, "email")])) {
             $receivers[$i] = new Receiver(
-                $data[sprintf(self::FORMAT_STRING, $i, "email")],
-                $data[sprintf(self::FORMAT_STRING, $i, "amount")]);
+                    $data[sprintf(self::FORMAT_STRING, $i, "email")], $data[sprintf(self::FORMAT_STRING, $i, "amount")]);
             $i++;
         }
 
         return $receivers;
     }
 
-    public static function addReceiversToOutput($items, &$output)
-    {
+    public static function addReceiversToOutput($items, &$output) {
         $i = 0;
         foreach ($items as $item) {
             $output[sprintf(self::FORMAT_STRING, $i, "email")] = $item->getEmail();
@@ -54,10 +48,10 @@ class Receiver {
         }
     }
 
-    public function __toString()
-    {
+    public function __toString() {
         return "email: " . $this->email . " amount: " . $this->amount;
     }
+
 }
 
 ?>

@@ -1,8 +1,4 @@
 <?php
-
-if (!isset($_SESSION)) {
-    session_start();
-}
 /**
  * @copyright 2010 Payson
  */
@@ -303,12 +299,4 @@ $paysonAdmin['FI']['inv_status_history_head2'] = '<td>Datum</td> <td>Status</td>
 //db table names
 $paysonDbTableOrderEvents = "payson_order_event";
 
-$db = Db::getInstance();
-
-$orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect' ORDER BY id_order_state asc");
-
-if(count($orderStates) > 0)
-{
-    $_SESSION["_PS_OS_PAYSON_PAID"] = $orderStates[0]['id_order_state'];
-}
 ?>

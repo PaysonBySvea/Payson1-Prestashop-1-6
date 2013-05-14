@@ -19,7 +19,7 @@ function paysonIpn() {
     include_once(_PS_MODULE_DIR_ . 'paysondirect/paysondirect.php');
 
     $postData = file_get_contents("php://input");
-    $token = $_GET["TOKEN"];
+    $token = "";
     $cart_id = intval($_GET["id_cart"]);
     
     $payson = new Paysondirect();
@@ -28,12 +28,12 @@ function paysonIpn() {
 
     // Validate the request
     $response = $api->validate($postData);
-
+    
     if ($response->isVerified()) {
-
+        
         createPaysonOrderEvents($response);
-
-        $payson->CreateOrder($cart_id, $token, $response->getPaymentDetails());
+        $details = $response->getPaymentDetails();
+        $payson->CreateOrder($cart_id, $token, $details);
     } else {
         if (Configuration::get('PAYSON_LOGS') == 'yes')
             Logger::addLog('<Payson Direct api>The response could not validate.', 1, NULL, NULL, NULL, true);
@@ -66,7 +66,7 @@ function createPaysonOrderEvents($response) {
 	token                         =  '" . $response->getPaymentDetails()->getToken() . "'";
 
     $paysonInvoiceInsert = "";
-    if ($ipn_respons['type'] == "INVOICE") {
+    if ($response->getPaymentDetails()->getType() == "INVOICE") {
         $paysonInvoiceInsert = ",
                 invoice_status                  = '" . $response->getPaymentDetails()->getInvoiceStatus() . "', 
                 shippingAddress_name            = '" . $response->getPaymentDetails()->getShippingAddressName() . "', 

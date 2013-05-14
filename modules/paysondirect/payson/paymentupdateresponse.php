@@ -3,6 +3,7 @@
 require_once "responseenvelope.php";
 
 class PaymentUpdateResponse {
+
     protected $responseEnvelope;
 
     public function __construct($responseData) {
@@ -16,7 +17,7 @@ class PaymentUpdateResponse {
     public function __toString() {
         return $this->responseEnvelope->__toString();
     }
-}
 
+}
 
 ?>

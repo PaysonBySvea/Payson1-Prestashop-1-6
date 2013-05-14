@@ -1,6 +1,7 @@
 <?php
 
 class PaymentUpdateData {
+
     protected $token;
     protected $method;
 
@@ -17,6 +18,7 @@ class PaymentUpdateData {
 
         return $output;
     }
+
 }
 
 ?>

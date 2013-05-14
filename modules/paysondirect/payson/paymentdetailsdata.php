@@ -1,9 +1,10 @@
 <?php
 
 class PaymentDetailsData {
+
     protected $token;
 
-    public function __construct($token){
+    public function __construct($token) {
         $this->token = $token;
     }
 
@@ -14,6 +15,7 @@ class PaymentDetailsData {
 
         return $output;
     }
+
 }
 
 ?>
