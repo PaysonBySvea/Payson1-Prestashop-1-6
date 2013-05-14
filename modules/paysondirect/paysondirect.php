@@ -443,9 +443,9 @@ class Paysondirect extends PaymentModule {
 
         $cart = new Cart($cart_id);
         $customer = new Customer($cart->id_customer);
-        
+
         if (!Validate::isLoadedObject($customer))
-                    Tools::redirect('index.php?controller=order&step=1');
+            Tools::redirect('index.php?controller=order&step=1');
 
         $api = $this->getAPIInstance();
 
@@ -465,11 +465,11 @@ class Paysondirect extends PaymentModule {
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-              
+
                 $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
 
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
-            }elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
+            } elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
 
                 //since this in an invoice, we need to create shippingadress
                 $address = new Address(intval($cart->id_address_delivery));
@@ -494,8 +494,7 @@ class Paysondirect extends PaymentModule {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
 
-                if ($this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key))
-                    ; {
+                if ($this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key)) {
                     Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
                 }
             } elseif ($paymentDetails->getStatus() == 'ERROR') {
