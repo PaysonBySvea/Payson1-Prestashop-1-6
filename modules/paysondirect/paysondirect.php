@@ -440,7 +440,7 @@ class Paysondirect extends PaymentModule {
     }
 
     public function CreateOrder($cart_id, $token, $ipnResponse = NULL) {
-
+        require('../../header.php');
         $cart = new Cart($cart_id);
         $customer = new Customer($cart->id_customer);
 
@@ -467,7 +467,7 @@ class Paysondirect extends PaymentModule {
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
 
                 $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
-
+	
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
 
