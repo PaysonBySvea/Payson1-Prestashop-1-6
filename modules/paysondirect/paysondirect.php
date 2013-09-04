@@ -37,68 +37,75 @@ class Paysondirect extends PaymentModule {
     public function install() {
         include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
-        $table_name_order_events = _DB_PREFIX_ . $paysonDbTableOrderEvents;
-        $q = $this->paysonCreateTransOrderEventsTableQuery($table_name_order_events);
+        Db::getInstance()->executeS($this->paysonCreateTransOrderEventsTableQuery(_DB_PREFIX_ . $paysonDbTableOrderEvents));
+        
+        $orderStates = Db::getInstance()->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect'");
+        $paysonPaidId = '';
+        
+        if(!$orderStates){
+            $db = Db::getInstance();
+            $db->insert("order_state", array(
+                "id_order_state" => "null",
+                "invoice" => "1",
+                "send_email" => "1",
+                "module_name" => "paysondirect",
+                "color" => "Orange",
+                "unremovable" => "1",
+                "hidden" => "0",
+                "logable" => "1",
+                "delivery" => "0",
+                "shipped" => "0",
+                "paid" => "1",
+                "deleted" => "0"));
 
-        $db = Db::getInstance();
+            $paysonPaidId = $db->Insert_ID();
 
-        $db->Execute($q);
+            $languages = $db->executeS("SELECT id_lang, iso_code FROM " . _DB_PREFIX_ . "lang WHERE iso_code IN('sv','en','fi')");
 
-        $db->insert("order_state", array(
-            "id_order_state" => "null",
-            "invoice" => "1",
-            "send_email" => "1",
-            "module_name" => "paysondirect",
-            "color" => "Orange",
-            "unremovable" => "1",
-            "hidden" => "0",
-            "logable" => "1",
-            "delivery" => "0",
-            "shipped" => "0",
-            "paid" => "1",
-            "deleted" => "0"));
-
-        $paysonPaidId = $db->Insert_ID();
-
-        $languages = $db->executeS("SELECT id_lang, iso_code FROM " . _DB_PREFIX_ . "lang WHERE iso_code IN('sv','en','fi')");
-
-        foreach ($languages as $language) {
-            switch ($language['iso_code']) {
-                case 'sv':
+            foreach ($languages as $language) {
+                switch ($language['iso_code']) {
+                    case 'sv':
 
 
-                    $db->insert('order_state_lang', array(
-                        "id_order_state" => pSQL($paysonPaidId),
-                        "id_lang" => pSQL($language['id_lang']),
-                        "name" => "Betald med Payson",
-                        "template" => "payment"
-                    ));
-                    break;
+                        $db->insert('order_state_lang', array(
+                            "id_order_state" => pSQL($paysonPaidId),
+                            "id_lang" => pSQL($language['id_lang']),
+                            "name" => "Betald med Payson",
+                            "template" => "payment"
+                        ));
+                        break;
 
-                case 'en':
+                    case 'en':
 
-                    $db->insert('order_state_lang', array(
-                        "id_order_state" => pSQL($paysonPaidId),
-                        "id_lang" => pSQL($language['id_lang']),
-                        "name" => "Paid with Payson",
-                        "template" => "payment"
-                    ));
-                    break;
+                        $db->insert('order_state_lang', array(
+                            "id_order_state" => pSQL($paysonPaidId),
+                            "id_lang" => pSQL($language['id_lang']),
+                            "name" => "Paid with Payson",
+                            "template" => "payment"
+                        ));
+                        break;
 
-                case 'fi':
+                    case 'fi':
 
-                    $db->insert('order_state_lang', array(
-                        "id_order_state" => pSQL($paysonPaidId),
-                        "id_lang" => pSQL($language['id_lang']),
-                        "name" => "Maksettu Paysonilla",
-                        "template" => "payment"
-                    ));
-                    break;
+                        $db->insert('order_state_lang', array(
+                            "id_order_state" => pSQL($paysonPaidId),
+                            "id_lang" => pSQL($language['id_lang']),
+                            "name" => "Maksettu Paysonilla",
+                            "template" => "payment"
+                        ));
+                        break;
+                }
             }
-        }
 
-        // Add the payson logotype to the order status folder
-        copy(_PS_MODULE_DIR_ . "paysondirect/logo.gif", "../img/os/" . $paysonPaidId . ".gif");
+            // Add the payson logotype to the order status folder
+            copy(_PS_MODULE_DIR_ . "paysondirect/logo.gif", "../img/os/" . $paysonPaidId . ".gif");
+        }else {
+                foreach ($orderStates as $orderState) {
+                    $paysonPaidId = $orderState['id_order_state'];
+                    copy(_PS_MODULE_DIR_ . "paysondirect/logo.gif", "../img/os/" . $paysonPaidId . ".gif");
+                }
+         }
+
 
         if (!parent::install() OR !Configuration::updateValue("PAYSON_ORDER_STATE_PAID", $paysonPaidId) OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('PAYSON_PAYMENTMETHODS', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
@@ -107,13 +114,13 @@ class Paysondirect extends PaymentModule {
 
     public function uninstall() {
 
-        $db = Db::getInstance();
+        /*$db = Db::getInstance();
         $orderStates = $db->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect'");
 
         foreach ($orderStates as $orderState) {
             $db->delete("order_state", "id_order_state = " . pSQL($orderState['id_order_state']));
             $db->delete("order_state_lang", "id_order_state = " . pSQL($orderState['id_order_state']));
-        }
+        }*/
 
         return (parent::uninstall() AND
                 Configuration::deleteByName('PAYSON_EMAIL') AND
