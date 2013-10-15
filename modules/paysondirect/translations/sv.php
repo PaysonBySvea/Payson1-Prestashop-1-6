@@ -50,7 +50,7 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_bafd7322c6e97d25b6299b5d6fe8920
 $_MODULE['<{paysondirect}prestashop>paysondirect_40673c9e8bcec1c3fe90c143c847dc71'] = 'Du hittar dina loggar för Paysondirekt i admin | Avancerad Parameter -> Loggar.';
 $_MODULE['<{paysondirect}prestashop>paysondirect_315c3a6b98ed911d4d11fc402682c4be'] = 'Fakturaavgift inkl. moms:';
 $_MODULE['<{paysondirect}prestashop>paysondirect_d03fc1d21e2c5c19d73a50abba45ab1c'] = 'Instruktioner för fakturavgift';
-$_MODULE['<{paysondirect}prestashop>paysondirect_6b63e7af93e09c829428cd82a8b85e97'] = 'Denna modul använder en produkt i din webshop som fakturaavgift. För att detta skall fungera måste du skapa en produkt med referensen PS_FS';
+$_MODULE['<{paysondirect}prestashop>paysondirect_6b63e7af93e09c829428cd82a8b85e97'] = 'Denna modul använder en produkt i din webshop som fakturaavgift. För att detta skall fungera måste du skapa en produkt med referensen PS_FA';
 $_MODULE['<{paysondirect}prestashop>paysondirect_4c472814d74b3ba08a86a8086dae611d'] = 'Gå till Katalog -> Produkter i adminstrationen';
 $_MODULE['<{paysondirect}prestashop>paysondirect_e2bd54357a9bb5767cbb0718827b2014'] = 'Klicka på \"Lägg till ny\"';
 $_MODULE['<{paysondirect}prestashop>paysondirect_bafe0a0fa9fc694b3afe69c092370409'] = 'Skriv in namn, referens, pris, moms, status (Disabled) och spara sedan produkten';
