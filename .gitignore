@@ -337,3 +337,5 @@ pip-log.txt
 /modules/statscarrier/
 /modules/blockstore/
 /modules/sendtoafriend/
+/nbproject/project.properties
+/nbproject/project.xml
