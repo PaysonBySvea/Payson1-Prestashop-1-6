@@ -3,19 +3,29 @@
 ## Description
 
 Module for Prestashop implementing Payson
+* Support 
+Prestashop 1.5.X
+* Requirements: 
+Curl
 
 ## Installation
 
-Copy all files from this repository into yor Prestashop root. 
+You should have a backup of your web store and database 
+* Download the module on your PC 
+* Go to the folder paysondirect
+* Compress the contents of the catalog 'paysondirect' to another directory and name it to paysondirect.zip
+* Log into your web shop Administration Panel
+* Go to Modules and click ?Add a new module?
+* Upload the paysondirect.zip from your computer
 
 ### Configuration
 
 
 Log into your web shop Administration Panel. 
-Go to Modules -> Payment & Geteways -> Payson vXX and click Install.
-Go to Modules -> Payment & Geteways -> Payson vXX and click Configure (You
-do not need to configure the module by sandbox).
-Enter your Email, Agent ID, MD5 Key and payment method. Click save.
+* Go to Modules -> Payment & Geteways -> Payson and click Install.
+* Go to Modules -> Payment & Geteways -> Payson and click Configure 
+(You do not need to configure the module by sandbox).
+* Enter your Email, Agent ID, MD5 Key and payment method. Click save.
 
 #### Payson Faktura:
 Enable Payson Invoice (Only if you have a contract for Payson Invoice).
@@ -33,10 +43,10 @@ Tax must be 25 %
 ## Upgrade
 
 You should have a backup of your web store and database.
-Log into your web shop Administration Panel. 
-Go to Modules -> Payment & Geteways -> Payson vXX and click Uninstall.
-Go to Modules -> Payment & Geteways -> Payson vXX and click Delete.
-Go to Installation in this document.
+* Log into your web shop Administration Panel. 
+* Go to Modules -> Payment & Geteways -> Payson and click Uninstall.
+* Go to Modules -> Payment & Geteways -> Payson and click Delete.
+* Go to Installation in this document.
 
 ## Usage
 
