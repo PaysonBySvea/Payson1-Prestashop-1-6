@@ -50,7 +50,7 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_bafd7322c6e97d25b6299b5d6fe8920
 $_MODULE['<{paysondirect}prestashop>paysondirect_40673c9e8bcec1c3fe90c143c847dc71'] = 'Du hittar dina loggar för Paysondirekt i admin | Avancerad Parameter -> Loggar.';
 $_MODULE['<{paysondirect}prestashop>paysondirect_315c3a6b98ed911d4d11fc402682c4be'] = 'Fakturaavgift inkl. moms:';
 $_MODULE['<{paysondirect}prestashop>paysondirect_d03fc1d21e2c5c19d73a50abba45ab1c'] = 'Instruktioner för fakturavgift';
-$_MODULE['<{paysondirect}prestashop>paysondirect_6b63e7af93e09c829428cd82a8b85e97'] = 'Denna modul använder en produkt i din webshop som fakturaavgift. För att detta skall fungera måste du skapa en produkt med referensen PS_FS';
+$_MODULE['<{paysondirect}prestashop>paysondirect_6b63e7af93e09c829428cd82a8b85e97'] = 'Denna modul använder en produkt i din webshop som fakturaavgift. För att detta skall fungera måste du skapa en produkt med referensen PS_FA';
 $_MODULE['<{paysondirect}prestashop>paysondirect_4c472814d74b3ba08a86a8086dae611d'] = 'Gå till Katalog -> Produkter i adminstrationen';
 $_MODULE['<{paysondirect}prestashop>paysondirect_e2bd54357a9bb5767cbb0718827b2014'] = 'Klicka på \"Lägg till ny\"';
 $_MODULE['<{paysondirect}prestashop>paysondirect_bafe0a0fa9fc694b3afe69c092370409'] = 'Skriv in namn, referens, pris, moms, status (Disabled) och spara sedan produkten';
@@ -79,6 +79,7 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_65569f46d612ae5bdb2bfa02bf9d247
 $_MODULE['<{paysondirect}prestashop>paysondirect_ed738e4bbabb44e6873ba0662abc7af9'] = 'Payson modulfel: (ogiltigt adressdata)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_ef8bf7e644ccf5810e5b7c1a3e53a246'] = 'Paysonreferens: ';
 $_MODULE['<{paysondirect}prestashop>paysondirect_278342c8b31437d44bfe929337c43a8c'] = 'Order nekad';
+$_MODULE['<{paysondirect}prestashop>paysondirect_5928ab7e396ec117fa0c443731b07e71'] = 'Betalningen kunde ej genomföras. Vänligen försök igen eller välj en annan betalmetod.';
 $_MODULE['<{paysondirect}prestashop>paysondirect_59d581c1734cacc7fd1344ea481221df'] = 'Transaktionen kunde ej slutföras';
 $_MODULE['<{paysondirect}prestashop>paysondirect_78fa60e395e203759f8e33a6d79c7fd5'] = 'Betala med Payson (Visa, Mastercard & Internetbank)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_eed51e16dea8e341cfa87f72a4e2a514'] = 'Betala via Faktura';
