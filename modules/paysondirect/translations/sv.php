@@ -84,5 +84,5 @@ $_MODULE['<{paysondirect}prestashop>paysondirect_59d581c1734cacc7fd1344ea481221d
 $_MODULE['<{paysondirect}prestashop>paysondirect_78fa60e395e203759f8e33a6d79c7fd5'] = 'Betala med Payson (Visa, Mastercard & Internetbank)';
 $_MODULE['<{paysondirect}prestashop>paysondirect_eed51e16dea8e341cfa87f72a4e2a514'] = 'Betala via Faktura';
 $_MODULE['<{paysondirect}prestashop>paysondirect_2cbcdf9e93ff9e65bd2a6509617cdbcd'] = 'Om du väljer att betala med Paysonfaktura så tillkommer en avgift om ';
-$_MODULE['<{paysondirect}prestashop>paysondirect_b24895f193abeace4784e516a3d81473'] = 'Betalningsvillkor är 10 dagar och fakturan kommer att skickas via epost till den adress du anger';
+$_MODULE['<{paysondirect}prestashop>paysondirect_b24895f193abeace4784e516a3d81473'] = 'Betalningsvillkor är 14 dagar och fakturan kommer att skickas via epost till den adress du anger';
 $_MODULE['<{paysondirect}prestashop>paysondirect_2865cfbebb4ed9c8d8c78e42a74d6ec8'] = 'För att betala med Payson Faktura krävs att du är minst 18år gammal, folkbokförd i Sverige samt att du blir godkänd i den kreditbedömning som görs för varje köp';
