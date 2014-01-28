@@ -52,7 +52,7 @@ class LocaleCode {
             case "EN":
                 return "EN";
             default:
-                throw new PaysonApiException("Invalid constant");
+                return "EN";
         }
     }
 
