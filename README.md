@@ -4,7 +4,7 @@
 
 Module for Prestashop implementing Payson
 * Support 
-Prestashop 1.5.X and 1.6.X
+Prestashop 1.5.6.X and 1.6.X
 * Requirements: 
 Curl
 
