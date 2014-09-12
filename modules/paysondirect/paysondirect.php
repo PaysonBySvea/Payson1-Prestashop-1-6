@@ -17,7 +17,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.2';
+        $this->version = '2.3.3';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -37,7 +37,7 @@ class Paysondirect extends PaymentModule {
     public function install() {
         include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
 
-        Db::getInstance()->executeS($this->paysonCreateTransOrderEventsTableQuery(_DB_PREFIX_ . $paysonDbTableOrderEvents));
+        Db::getInstance()->execute($this->paysonCreateTransOrderEventsTableQuery(_DB_PREFIX_ . $paysonDbTableOrderEvents));
         
         $orderStates = Db::getInstance()->executeS("SELECT id_order_state FROM " . _DB_PREFIX_ . "order_state WHERE module_name='paysondirect'");
         $paysonPaidId = '';
