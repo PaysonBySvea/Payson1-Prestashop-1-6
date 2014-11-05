@@ -5,7 +5,7 @@
     </a>
 </p>
 
-{if Configuration::get('PAYSON_INVOICE_ENABLED') && $paysonInvoiceAmountMinLimit}
+{if Configuration::get('PAYSON_INVOICE_ENABLED') && $paysonInvoiceAmountMinLimit && Context::getContext()->country->iso_code == 'SE'}
     <p class="payment_module">
         <a href="{$base_dir_ssl}modules/paysondirect/redirect.php?method=invoice" title="{l s='Pay with Invoice' mod='paysondirect'}">
             <img src="{$module_template_dir}paysoninvoice.png" alt="{l s='Pay with Invoice' mod='paysondirect'}" />

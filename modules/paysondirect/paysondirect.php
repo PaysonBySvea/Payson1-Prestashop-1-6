@@ -17,7 +17,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.4';
+        $this->version = '2.3.5';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
