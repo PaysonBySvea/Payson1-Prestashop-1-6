@@ -1,13 +1,13 @@
-<p class="payment_module">
-    <a href="{$base_dir_ssl}modules/paysondirect/redirect.php" title="{l s='Pay with Payson' mod='paysondirect'}">
+<p class="payment_module payson_pay_module">
+    <a href="{$base_dir_ssl}modules/paysondirect/redirect.php"  onClick="$('.payson_pay_module').html('{l s='Your order is being send to Payson for payment. Please  wait' mod='paysondirect'}')" title="{l s='Pay with Payson' mod='paysondirect'} ">
         <img src="{$module_template_dir}payson.png" alt="{l s='Pay with Payson' mod='paysondirect'}" />
         <strong>{l s='Pay with Payson' mod='paysondirect'}</strong>
     </a>
 </p>
 
 {if Configuration::get('PAYSON_INVOICE_ENABLED') && $paysonInvoiceAmountMinLimit && Context::getContext()->country->iso_code == 'SE'}
-    <p class="payment_module">
-        <a href="{$base_dir_ssl}modules/paysondirect/redirect.php?method=invoice" title="{l s='Pay with Invoice' mod='paysondirect'}">
+    <p class="payment_module payson_pay_module">
+        <a href="{$base_dir_ssl}modules/paysondirect/redirect.php?method=invoice" onClick="$('.payson_pay_module').html('{l s='Your order is being send to Payson for payment. Please  wait' mod='paysondirect'}')" title="{l s='Pay with Payson invoice' mod='paysondirect'}">
             <img src="{$module_template_dir}paysoninvoice.png" alt="{l s='Pay with Invoice' mod='paysondirect'}" />
             <strong>{l s='Pay with Invoice' mod='paysondirect'}</strong>	
        </a>
