@@ -9,7 +9,7 @@
             document.location = '{$base_dir_ssl}modules/paysondirect/redirect.php?method=invoice';
         }    
     </script>
-    <a href="javascript:disableBtn()"  title="title="{l s='Pay with Payson' mod='paysondirect'} ">
+    <a href="javascript:disableBtn()"  title="{l s='Pay with Payson' mod='paysondirect'} ">
         <img src="{$module_template_dir}payson.png" alt="{l s='Pay with Payson' mod='paysondirect'}" />
         <strong>{l s='Pay with Payson' mod='paysondirect'}</strong>
     </a>

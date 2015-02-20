@@ -1,5 +1,5 @@
 <?php
-
+include_once(_PS_MODULE_DIR_ . 'paysondirect/payson/paysonapi.php');
 class PayData {
 
     // Required
@@ -90,10 +90,29 @@ class PayData {
     }
 
     public function setFundingConstraints($constraints) {
-        if (!is_array($constraints))
-            throw new PaysonApiException("Parameter must be an array of funding constraints");
+        if (!is_array($constraints)) {
+            $output = array();
+            $opts = array(
+                0 => array(''),
+                2 => array('card'),
+                3 => array('bank'),
+                4 => array('sms'),
+                5 => array('bank', 'card'),
+                6 => array('sms', 'card'),
+                7 => array('sms', 'bank'),
+                1 => array('bank', 'card', 'sms'),
+            );
+            $optsStrings = array('' => FundingConstraint::NONE, 'bank' => FundingConstraint::BANK, 'card' => FundingConstraint::CREDITCARD, 'invoice' => FundingConstraint::INVOICE, 'sms' => FundingConstraint::SMS);
+            if ($opts[$constraints]) {
+                foreach ($opts[$constraints] as $methodStringName) {
+                    $output[] = $optsStrings[$methodStringName];
+                }
+            }
+        }else{
+            $output=$constraints;
+        }
 
-        $this->fundingConstraints = $constraints;
+        $this->fundingConstraints = $output;
     }
 
     /**
