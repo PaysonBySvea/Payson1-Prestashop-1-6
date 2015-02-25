@@ -71,7 +71,7 @@ $paysonUrl = array(
     'cancelUrl' => "http://" . $url . "index.php?controller=order"
 );
 
-$orderItems = orderItemsList($cart);
+$orderItems = orderItemsList($cart, $payson);
 
 $shopInfo = array(
     'shopName' => Configuration::get('PS_SHOP_NAME'),
@@ -103,7 +103,9 @@ $payData->setFundingConstraints($constraints);
         $payData->setInvoiceFee($payson->paysonInvoiceFee());
     }
     $payData->setGuaranteeOffered('NO');
-
+    
+    $payData->setShowReceiptPage(!Configuration::get('PAYSON_RECEIPT')? FALSE : ($payson->discount_applies ? FALSE : TRUE ));
+    //$payData->setShowReceiptPage($payson->discount_applies ? FALSE : TRUE);
     $payResponse = $api->pay($payData);
 
     if ($payResponse->getResponseEnvelope()->wasSuccessful()) {  //ack = SUCCESS och token  = token = Nï¿½got
@@ -129,13 +131,15 @@ $payData->setFundingConstraints($constraints);
      * @disc 
      */
 
-    function orderItemsList($cart) {
+    function orderItemsList($cart, $payson) {
 
         include_once(_PS_MODULE_DIR_ . 'paysondirect/payson/orderitem.php');
 
         $orderitemslist = array();
         foreach ($cart->getProducts() AS $cartProduct) {
-
+            if(isset($cartProduct['quantity_discount_applies']) && $cartProduct['quantity_discount_applies'] == 1)
+                $payson->discount_applies = 1;
+            
             $my_taxrate = $cartProduct['rate'] / 100;
             $product_price = $cartProduct['price'];
             $attributes_small = isset($cartProduct['attributes_small']) ? $cartProduct['attributes_small'] : '';

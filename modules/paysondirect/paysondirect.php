@@ -13,15 +13,17 @@ class Paysondirect extends PaymentModule {
     private $invoiceAmountMinLimit = 30;
     private $MODULE_VERSION;
     public $testMode;
+    public $discount_applies;
 
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.6';
+        $this->version = '2.3.7';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
         $this->currencies_mode = 'checkbox';
+        $this->discount_applies = 0;
 
         $this->MODULE_VERSION = sprintf('payson_prestashop|%s|%s', $this->version, _PS_VERSION_);
         $this->testMode = Configuration::get('PAYSON_MODE') == 'sandbox';
@@ -107,7 +109,7 @@ class Paysondirect extends PaymentModule {
          }
 
 
-        if (!parent::install() OR !Configuration::updateValue("PAYSON_ORDER_STATE_PAID", $paysonPaidId) OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('paysonpay', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
+        if (!parent::install() OR !Configuration::updateValue("PAYSON_ORDER_STATE_PAID", $paysonPaidId) OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('paysonpay', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_RECEIPT', '0') OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
         return true;
     }
@@ -130,6 +132,7 @@ class Paysondirect extends PaymentModule {
                 Configuration::deleteByName('PAYSON_INVOICE_ENABLED') AND
                 Configuration::deleteByName('PAYSON_GUARANTEE') AND
                 Configuration::deleteByName('PAYSON_MODE') AND
+                Configuration::deleteByName('PAYSON_RECEIPT') AND
                 Configuration::deleteByName('PAYSON_LOGS') AND
                 Configuration::deleteByName('PAYSON_MODULE_VERSION') AND
                 Configuration::deleteByName("PAYSON_ORDER_STATE_PAID"));
@@ -190,6 +193,11 @@ class Paysondirect extends PaymentModule {
                 else
                     Configuration::updateValue('PAYSON_INVOICE_ENABLED', strval($_POST['enableInvoice']));
 
+                if (!isset($_POST['enableReceipt']))
+                    Configuration::updateValue('PAYSON_RECEIPT', '0');
+                else
+                    Configuration::updateValue('PAYSON_RECEIPT', strval($_POST['enableReceipt']));
+                
                 $this->displayConf();
             }
             else
@@ -241,7 +249,8 @@ class Paysondirect extends PaymentModule {
                     'PAYSON_MD5KEY',
                     'PAYSON_EMAIL',
                     'paysonpay',
-                    'PAYSON_INVOICE_ENABLED'
+                    'PAYSON_INVOICE_ENABLED',
+                    'PAYSON_RECEIPT'
         ));
 
         $payson_mode_text = 'Currently using <strong>' . Configuration::get('PAYSON_MODE') . '</strong> mode.';
@@ -252,6 +261,8 @@ class Paysondirect extends PaymentModule {
 
         $enableInvoice = array_key_exists('enableInvoice', $_POST) ? $_POST['enableInvoice'] : (array_key_exists('PAYSON_INVOICE_ENABLED', $conf) ? $conf['PAYSON_INVOICE_ENABLED'] : '0');
 
+        $enableReceipt = array_key_exists('enableReceipt', $_POST) ? $_POST['enableReceipt'] : (array_key_exists('PAYSON_RECEIPT', $conf) ? $conf['PAYSON_RECEIPT'] : '0');
+        
         $this->_html .= '
 		<form action="' . $_SERVER['REQUEST_URI'] . '" method="post" style="clear: both;">
 		<fieldset>
@@ -302,8 +313,10 @@ class Paysondirect extends PaymentModule {
 				' . $this->l('MD5 key:  ') . '
 				<input type="text" size="45" name="md5key" value="' . htmlentities($md5key, ENT_COMPAT, 'UTF-8') . '" /><br /><br />
 				
+                                ' . $this->l('Show Receipt Page:') .
+                                ' <input type="checkbox" size="45" name="enableReceipt" value="1" ' . ($enableReceipt == "1" ? "checked=checked" : '') . '" /><br /><br />
 				
-				' . $this->l('Troubleshoot response from Payson Direct.') . '<br />
+				' .  $this->l('Troubleshoot response from Payson Direct.') . '<br />
 				' . $this->l('Logg:') . '
 							
 				<select name="payson_log">

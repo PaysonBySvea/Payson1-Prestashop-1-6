@@ -100,6 +100,19 @@ class FeesPayer {
 
 }
 
+class ShowReceiptPage {
+
+    public static function ConstantToString($value) {
+        switch ($value) {
+            case "0":
+                return "false";                                         
+            default:
+                return "true";
+        }
+    }
+
+}
+
 class FundingConstraint {
 
     const NONE = 0;

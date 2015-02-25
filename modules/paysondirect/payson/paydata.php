@@ -19,6 +19,7 @@ class PayData {
     protected $trackingId;
     protected $guaranteeOffered;
     protected $feesPayer;
+    protected $showReceiptPage;
 
     public function __construct($returnUrl, $cancelUrl, $ipnUrl, $memo, $sender, $receivers) {
         $this->setReturnUrl($returnUrl);
@@ -151,6 +152,10 @@ class PayData {
     public function setGuaranteeOffered($guaranteeOffered) {
         $this->guaranteeOffered = $guaranteeOffered;
     }
+    
+    public function setShowReceiptPage($showReceiptPage) {
+        $this->showReceiptPage = $showReceiptPage;
+    }
 
     /**
      * Prepares PayData object for sending by creating an array
@@ -201,6 +206,10 @@ class PayData {
 
         if (isset($this->guaranteeOffered)) {
             $output["guaranteeOffered"] = GuaranteeOffered::ConstantToString($this->guaranteeOffered);
+        }
+        
+        if(isset($this->showReceiptPage)){
+            $output["showReceiptPage"] = ShowReceiptPage::ConstantToString($this->showReceiptPage);
         }
 
         return $output;
