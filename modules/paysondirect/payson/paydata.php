@@ -90,7 +90,7 @@ class PayData {
         $this->orderItems = $items;
     }
 
-    public function setFundingConstraints($constraints) {
+    public function setFundingConstraints($constraints, $useAllInOne = Null) {
         if (!is_array($constraints)) {
             $output = array();
             $opts = array(
@@ -102,6 +102,7 @@ class PayData {
                 6 => array('sms', 'card'),
                 7 => array('sms', 'bank'),
                 1 => array('bank', 'card', 'sms'),
+                
             );
             $optsStrings = array('' => FundingConstraint::NONE, 'bank' => FundingConstraint::BANK, 'card' => FundingConstraint::CREDITCARD, 'invoice' => FundingConstraint::INVOICE, 'sms' => FundingConstraint::SMS);
             if ($opts[$constraints]) {
@@ -112,7 +113,9 @@ class PayData {
         }else{
             $output=$constraints;
         }
-
+        
+        if($useAllInOne) {$output[] = 3;}
+        
         $this->fundingConstraints = $output;
     }
 

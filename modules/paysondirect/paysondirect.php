@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.7';
+        $this->version = '2.3.8';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -109,7 +109,7 @@ class Paysondirect extends PaymentModule {
          }
 
 
-        if (!parent::install() OR !Configuration::updateValue("PAYSON_ORDER_STATE_PAID", $paysonPaidId) OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('paysonpay', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_RECEIPT', '0') OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
+        if (!parent::install() OR !Configuration::updateValue("PAYSON_ORDER_STATE_PAID", $paysonPaidId) OR !Configuration::updateValue('PAYSON_EMAIL', Configuration::get('PS_SHOP_EMAIL')) OR !Configuration::updateValue('PAYSON_AGENTID', '') OR !Configuration::updateValue('PAYSON_MD5KEY', '') OR !Configuration::updateValue('PAYSON_SANDBOX_CUSTOMER_EMAIL', 'test-shopper@payson.se') OR !Configuration::updateValue('PAYSON_SANDBOX_AGENTID', '1') OR !Configuration::updateValue('PAYSON_SANDBOX_MD5KEY', 'fddb19ac-7470-42b6-a91d-072cb1495f0a') OR !Configuration::updateValue('paysonpay', 'all') OR !Configuration::updateValue('PAYSON_INVOICE_ENABLED', '0') OR !Configuration::updateValue('PAYSON_ALL_IN_ONE_ENABLED', '1') OR !Configuration::updateValue('PAYSON_MODE', 'sandbox') OR !Configuration::updateValue('PAYSON_GUARANTEE', 'NO') OR !Configuration::updateValue('PAYSON_MODULE_VERSION', 'PAYSON-PRESTASHOP-' . $this->version) OR !Configuration::updateValue('PAYSON_RECEIPT', '0') OR !Configuration::updateValue('PAYSON_LOGS', 'no') OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
         return true;
     }
@@ -130,6 +130,7 @@ class Paysondirect extends PaymentModule {
                 Configuration::deleteByName('PAYSON_MD5KEY') AND
                 Configuration::deleteByName('paysonpay') AND
                 Configuration::deleteByName('PAYSON_INVOICE_ENABLED') AND
+                Configuration::deleteByName('PAYSON_ALL_IN_ONE_ENABLED') AND
                 Configuration::deleteByName('PAYSON_GUARANTEE') AND
                 Configuration::deleteByName('PAYSON_MODE') AND
                 Configuration::deleteByName('PAYSON_RECEIPT') AND
@@ -193,6 +194,13 @@ class Paysondirect extends PaymentModule {
                 else
                     Configuration::updateValue('PAYSON_INVOICE_ENABLED', strval($_POST['enableInvoice']));
 
+                
+                if (!isset($_POST['enableAllInOne']))
+                    Configuration::updateValue('PAYSON_ALL_IN_ONE_ENABLED', '1');
+                else
+                    Configuration::updateValue('PAYSON_ALL_IN_ONE_ENABLED', strval($_POST['enableAllInOne']));
+                
+                
                 if (!isset($_POST['enableReceipt']))
                     Configuration::updateValue('PAYSON_RECEIPT', '0');
                 else
@@ -250,10 +258,11 @@ class Paysondirect extends PaymentModule {
                     'PAYSON_EMAIL',
                     'paysonpay',
                     'PAYSON_INVOICE_ENABLED',
+                    'PAYSON_ALL_IN_ONE_ENABLED',
                     'PAYSON_RECEIPT'
         ));
 
-        $payson_mode_text = 'Currently using <strong>' . Configuration::get('PAYSON_MODE') . '</strong> mode.';
+        $payson_mode_text = 'Currently using ' . Configuration::get('PAYSON_MODE') . ' mode.';
 
         $agentid = array_key_exists('agentid', $_POST) ? $_POST['agentid'] : (array_key_exists('PAYSON_AGENTID', $conf) ? $conf['PAYSON_AGENTID'] : '');
         $md5key = array_key_exists('md5key', $_POST) ? $_POST['md5key'] : (array_key_exists('PAYSON_MD5KEY', $conf) ? $conf['PAYSON_MD5KEY'] : '');
@@ -261,6 +270,8 @@ class Paysondirect extends PaymentModule {
 
         $enableInvoice = array_key_exists('enableInvoice', $_POST) ? $_POST['enableInvoice'] : (array_key_exists('PAYSON_INVOICE_ENABLED', $conf) ? $conf['PAYSON_INVOICE_ENABLED'] : '0');
 
+        $enableAllInOne = array_key_exists('enableAllInOne', $_POST) ? $_POST['enableAllInOne'] : (array_key_exists('PAYSON_ALL_IN_ONE_ENABLED', $conf) ? $conf['PAYSON_ALL_IN_ONE_ENABLED'] : '1');
+        
         $enableReceipt = array_key_exists('enableReceipt', $_POST) ? $_POST['enableReceipt'] : (array_key_exists('PAYSON_RECEIPT', $conf) ? $conf['PAYSON_RECEIPT'] : '0');
         
         $this->_html .= '
@@ -281,24 +292,26 @@ class Paysondirect extends PaymentModule {
 						<option value="sandbox"' . (Configuration::get('PAYSON_MODE') == 'sandbox' ? ' selected="selected"' : '') . '>' . $this->l('Sandbox') . '&nbsp;&nbsp;</option>
 				</select><br />
 				
-				' . $this->l($payson_mode_text) . '<br /><br />
+				<strong>' . $this->l($payson_mode_text) . '</strong><br /><br />
 				
 				' . $this->l('Pay with Payson (Visa, Mastercard, Internetbank or SMS).') . '<br />
 				' . $this->l('Payment methods:  ') . '
 				<select name="paymentmethods">
 						<option value="1"' . (Configuration::get('paysonpay') == '1' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD/BANK/SMS') . '&nbsp;&nbsp;</option>
 						<option value="5"' . (Configuration::get('paysonpay') == '5' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD/BANK') . '&nbsp;&nbsp;</option>
-                        <option value="6"' . (Configuration::get('paysonpay') == '6' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD/SMS') . '&nbsp;&nbsp;</option>
-                        <option value="7"' . (Configuration::get('paysonpay') == '7' ? ' selected="selected"' : '') . '>' . $this->l('BANK/SMS') . '&nbsp;&nbsp;</option>
-                        <option value="2"' . (Configuration::get('paysonpay') == '2' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD') . '&nbsp;&nbsp;</option>
-                        <option value="3"' . (Configuration::get('paysonpay') == '3' ? ' selected="selected"' : '') . '>' . $this->l('BANK') . '&nbsp;&nbsp;</option>
-                        <option value="4"' . (Configuration::get('paysonpay') == '4' ? ' selected="selected"' : '') . '>' . $this->l('SMS') . '&nbsp;&nbsp;</option>
-				</select><br /><br />
-                                
-                                
-                                
+                                                <option value="6"' . (Configuration::get('paysonpay') == '6' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD/SMS') . '&nbsp;&nbsp;</option>
+                                                <option value="7"' . (Configuration::get('paysonpay') == '7' ? ' selected="selected"' : '') . '>' . $this->l('BANK/SMS') . '&nbsp;&nbsp;</option>
+                                                <option value="2"' . (Configuration::get('paysonpay') == '2' ? ' selected="selected"' : '') . '>' . $this->l('CREDITCARD') . '&nbsp;&nbsp;</option>
+                                                <option value="3"' . (Configuration::get('paysonpay') == '3' ? ' selected="selected"' : '') . '>' . $this->l('BANK') . '&nbsp;&nbsp;</option>
+                                                <option value="4"' . (Configuration::get('paysonpay') == '4' ? ' selected="selected"' : '') . '>' . $this->l('SMS') . '&nbsp;&nbsp;</option>
+                                </select><br /><br /> 
                                 ' . $this->l('Enable Payson Invoice.') .
-                ' <input type="checkbox" size="45" name="enableInvoice" value="1" ' . ($enableInvoice == "1" ? "checked=checked" : '') . '" /><br />
+                                ' <input type="checkbox" size="45" name="enableInvoice" value="1" ' . ($enableInvoice == "1" ? "checked=checked" : '') . '" /> &nbsp 
+                                
+                                <select name="enableAllInOne">
+						<option value="0"' . (Configuration::get('PAYSON_ALL_IN_ONE_ENABLED') == '0' ? ' selected="selected"' : '') . '>' . $this->l('Invoice') . '&nbsp;&nbsp;</option>
+						<option value="1"' . (Configuration::get('PAYSON_ALL_IN_ONE_ENABLED') == '1' ? ' selected="selected"' : '') . '>' . $this->l('All in one') . '&nbsp;&nbsp;</option>
+				</select><br />
                                 ' . $this->l('Payson Invoice requires a separate contract. Please contact Payson for more information') . '<br /><br />
                                 
 				' . $this->l('Enter your seller email for Paysondirect.') . '<br />
@@ -508,6 +521,7 @@ class Paysondirect extends PaymentModule {
 
             $currency = new Currency($cart->id_currency);
 
+            
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);

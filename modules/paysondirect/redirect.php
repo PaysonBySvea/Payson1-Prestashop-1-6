@@ -56,9 +56,12 @@ if ($currency_order->id != $currency_module['id_currency']) {
     $cart->update();
 }
 
+$useAllInOne = Configuration::get('PAYSON_INVOICE_ENABLED') == 1 && Configuration::get('PAYSON_ALL_IN_ONE_ENABLED') == 1 ? 1 : NULL;
 $amount = floatval($cart->getOrderTotal(true, 3));
 
 if ($isInvoicePurchase)
+    $amount += $payson->paysonInvoiceFee();
+elseif($useAllInOne)
     $amount += $payson->paysonInvoiceFee();
 
 $url = Tools::getHttpHost(false, true) . __PS_BASE_URI__;
@@ -96,12 +99,15 @@ $payData->setLocaleCode($shopInfo['localeCode']);
 $payData->setTrackingId($trackingId);
 
 $constraints = $isInvoicePurchase ? $constraints = array(FundingConstraint::INVOICE) : Configuration::get('paysonpay');
-$payData->setFundingConstraints($constraints);
+
+$payData->setFundingConstraints($constraints, $useAllInOne);
 
     $payData->setOrderItems($orderItems);
     if ($isInvoicePurchase) {
         $payData->setInvoiceFee($payson->paysonInvoiceFee());
-    }
+    }elseif($useAllInOne)
+        $payData->setInvoiceFee($payson->paysonInvoiceFee());
+    
     $payData->setGuaranteeOffered('NO');
     
     $payData->setShowReceiptPage(!Configuration::get('PAYSON_RECEIPT')? FALSE : ($payson->discount_applies ? FALSE : TRUE ));
@@ -138,8 +144,7 @@ $payData->setFundingConstraints($constraints);
         $orderitemslist = array();
         foreach ($cart->getProducts() AS $cartProduct) {
             if(isset($cartProduct['quantity_discount_applies']) && $cartProduct['quantity_discount_applies'] == 1)
-                $payson->discount_applies = 1;
-            
+                $payson->discount_applies = 1;           
             $my_taxrate = $cartProduct['rate'] / 100;
             $product_price = $cartProduct['price'];
             $attributes_small = isset($cartProduct['attributes_small']) ? $cartProduct['attributes_small'] : '';
