@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.8';
+        $this->version = '2.3.8.1';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -170,7 +170,7 @@ class Paysondirect extends PaymentModule {
                     $this->_postErrors[] = $this->l('Payson business must be an e-mail address.');
 
                 if (empty($_POST['md5key']))
-                    $this->_postErrors[] = $this->l('Payson Md5 key is required.');
+                    $this->_postErrors[] = $this->l('Payson API-Key is required.');
                 if (empty($_POST['agentid']))
                     $this->_postErrors[] = $this->l('Payson Agent Id is required.');
             }
@@ -322,8 +322,8 @@ class Paysondirect extends PaymentModule {
 				' . $this->l('Agent id:  ') . '
 				<input type="text" size="10" name="agentid" value="' . htmlentities($agentid, ENT_COMPAT, 'UTF-8') . '" /><br /><br />
 			
-				' . $this->l('Enter your MD5 key for Paysondirect.') . '<br />
-				' . $this->l('MD5 key:  ') . '
+				' . $this->l('Enter your API-Key for Paysondirect.') . '<br />
+				' . $this->l('API-Key:  ') . '
 				<input type="text" size="45" name="md5key" value="' . htmlentities($md5key, ENT_COMPAT, 'UTF-8') . '" /><br /><br />
 				
                                 ' . $this->l('Show Receipt Page:') .
@@ -391,7 +391,7 @@ class Paysondirect extends PaymentModule {
         $translations = array(
             'Your seller e-mail' => $this->l('Your seller e-mail'),
             'Your agent id' => $this->l('Your agent id'),
-            'Your md5 key' => $this->l('Your md5 key'),
+            'Your API-Key' => $this->l('Your API-Key'),
             'Payson guarantee' => $this->l('Payson guarantee'),
             'Payson guarantee. See Payson to what the values refer to regarding conditions etc.' => $this->l('Payson guarantee. See Payson to what the values refer to regarding conditions etc.'),
             'Paymentmethods' => $this->l('Paymentmethods'),
@@ -407,7 +407,7 @@ class Paysondirect extends PaymentModule {
             'Payson business e-mail address is required.' => $this->l('Payson business e-mail address is required.'),
             'Payson business must be an e-mail address.' => $this->l('Payson business must be an e-mail address.'),
             'Payson Agent Id is required.' => $this->l('Payson Agent Id is required.'),
-            'Payson Md5 key is required.' => $this->l('Payson Md5 key is required.'),
+            'Payson API-Key is required.' => $this->l('Payson API-Key is required.'),
             'Payson Agent Id is required.' => $this->l('Payson Agent Id is required.'),
             'mc_gross' => $this->l('Payson key \'mc_gross\' not specified, can\'t control amount paid.'),
             'payment' => $this->l('Payment: '),
@@ -567,7 +567,7 @@ class Paysondirect extends PaymentModule {
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 }
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
-            } elseif ($paymentDetails->getStatus() == 'ERROR') {
+            } elseif ($paymentDetails->getStatus() == 'ERROR' || $paymentDetails->getStatus()=='DENIED') {
                 $customer = new Customer($cart->id_customer);
 
                 $this->validateOrder((int) $cart->id, _PS_OS_CANCELED_, $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '   ' . $this->l('Order denied.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
