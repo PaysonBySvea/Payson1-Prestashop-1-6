@@ -50,35 +50,37 @@ function createPaysonOrderEvents($response) {
     include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
     $table_order_events = _DB_PREFIX_ . $paysonDbTableOrderEvents;
     $db = Db::getInstance();
+    $payson = new Paysondirect();
+    if ($payson->PaysonorderExists($response->getPaymentDetails()->getPurchaseId()) == false) {
+        $paysonDirectInsert = "
+       order_id                      = '1', 
+	   valid                         = '1', 
+	   added                         = NOW(), 
+	   updated                       = NOW(), 
+	   ipn_status                    = '" . $response->getPaymentDetails()->getStatus() . "', 	
+	   sender_email                  = '" . $response->getPaymentDetails()->getSenderEmail() . "', 
+	   currency_code                 = '" . $response->getPaymentDetails()->getCurrencyCode() . "',
+	   tracking_id                   = '" . $response->getPaymentDetails()->getTrackingId() . "',
+	   type                          = '" . $response->getPaymentDetails()->getType() . "',
+	   purchase_id                   = '" . $response->getPaymentDetails()->getPurchaseId() . "',					
+	   customer                      = '" . $response->getPaymentDetails()->getCustom() . "', 		
+	   token                         =  '" . $response->getPaymentDetails()->getToken() . "'";
 
-    $paysonDirectInsert = "
-        order_id                      = '1', 
-	valid                         = '1', 
-	added                         = NOW(), 
-	updated                       = NOW(), 
-	ipn_status                    = '" . $response->getPaymentDetails()->getStatus() . "', 	
-	sender_email                  = '" . $response->getPaymentDetails()->getSenderEmail() . "', 
-	currency_code                 = '" . $response->getPaymentDetails()->getCurrencyCode() . "',
-	tracking_id                   = '" . $response->getPaymentDetails()->getTrackingId() . "',
-	type                          = '" . $response->getPaymentDetails()->getType() . "',
-	purchase_id                   = '" . $response->getPaymentDetails()->getPurchaseId() . "',					
-	customer                      = '" . $response->getPaymentDetails()->getCustom() . "', 		
-	token                         =  '" . $response->getPaymentDetails()->getToken() . "'";
+        $paysonInvoiceInsert = "";
+        if ($response->getPaymentDetails()->getType() == "INVOICE") {
+            $paysonInvoiceInsert = ",
+              invoice_status                  = '" . $response->getPaymentDetails()->getInvoiceStatus() . "', 
+              shippingAddress_name            = '" . $response->getPaymentDetails()->getShippingAddressName() . "', 
+		      shippingAddress_street_ddress   = '" . $response->getPaymentDetails()->getShippingAddressStreetAddress() . "', 
+		      shippingAddress_postal_code     = '" . $response->getPaymentDetails()->getShippingAddressPostalCode() . "', 
+		      shippingAddress_city            = '" . $response->getPaymentDetails()->getShippingAddressCity() . "', 
+              shippingAddress_country         = '" . $response->getPaymentDetails()->getShippingAddressCountry() . "'";
+        }
 
-    $paysonInvoiceInsert = "";
-    if ($response->getPaymentDetails()->getType() == "INVOICE") {
-        $paysonInvoiceInsert = ",
-                invoice_status                  = '" . $response->getPaymentDetails()->getInvoiceStatus() . "', 
-                shippingAddress_name            = '" . $response->getPaymentDetails()->getShippingAddressName() . "', 
-		shippingAddress_street_ddress   = '" . $response->getPaymentDetails()->getShippingAddressStreetAddress() . "', 
-		shippingAddress_postal_code     = '" . $response->getPaymentDetails()->getShippingAddressPostalCode() . "', 
-		shippingAddress_city            = '" . $response->getPaymentDetails()->getShippingAddressCity() . "', 
-                shippingAddress_country         = '" . $response->getPaymentDetails()->getShippingAddressCountry() . "'";
+        $q = "INSERT INTO " . $table_order_events . " SET " . $paysonDirectInsert . $paysonInvoiceInsert;
+
+        $db->Execute($q);
     }
-
-    $q = "INSERT INTO " . $table_order_events . " SET " . $paysonDirectInsert . $paysonInvoiceInsert;
-
-    $db->Execute($q);
 }
 
 ?>

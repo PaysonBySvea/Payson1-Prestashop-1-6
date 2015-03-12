@@ -484,7 +484,15 @@ class Paysondirect extends PaymentModule {
         echo $error_code;
         exit;
     }
+        public function PaysonorderExists($purchaseid) {
+        $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'payson_order_event` WHERE `purchase_id` = ' . (int) $purchaseid);
+        return $result;
+    }
 
+    public function cartExists($cartId) {
+        $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_cart` = ' . (int) $cartId);
+        return $result;
+    }
     public function getAPIInstance() {
 
         if ($this->testMode) {
@@ -525,10 +533,11 @@ class Paysondirect extends PaymentModule {
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-
-                $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
-	
-                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
+                if($this->cartExists((int) $cart->id)==false){
+                    //Confirmation letter will be sent out with validateOrder with the function Mail::send
+                    $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
+                }
+                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . (int) $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
 
                 //since this in an invoice, we need to create shippingadress
@@ -553,10 +562,11 @@ class Paysondirect extends PaymentModule {
                 // Recalculate order total after invoice fee has been added
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-
-                if ($this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key)) {
-                    Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
+                if($this->cartExists((int) $cart->id) == false){
+                    //Confirmation letter will be sent out with validateOrder with the function Mail::send
+                    $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 }
+                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getStatus() == 'ERROR') {
                 $customer = new Customer($cart->id_customer);
 
