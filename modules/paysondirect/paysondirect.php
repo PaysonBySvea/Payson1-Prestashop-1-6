@@ -567,7 +567,7 @@ class Paysondirect extends PaymentModule {
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 }
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
-            } elseif ($paymentDetails->getStatus() == 'ERROR' || $paymentDetails->getStatus()=='DENIED') {
+            } elseif ($paymentDetails->getStatus() == 'ERROR' || $paymentDetails->getStatus()=='DENIED'||$paymentDetails->getStatus()=='EXPIRED') {
                 $customer = new Customer($cart->id_customer);
 
                 $this->validateOrder((int) $cart->id, _PS_OS_CANCELED_, $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '   ' . $this->l('Order denied.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
