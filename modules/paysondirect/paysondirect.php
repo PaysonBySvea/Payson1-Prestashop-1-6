@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.8.1';
+        $this->version = '2.3.8.2';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -493,6 +493,10 @@ class Paysondirect extends PaymentModule {
         $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_cart` = ' . (int) $cartId);
         return $result;
     }
+    public function orderExists($purchaseid) {
+        $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'orders` WHERE `purchase_id` = ' . (int) $purchaseid);
+        return $result;
+    }
     public function getAPIInstance() {
 
         if ($this->testMode) {
@@ -533,7 +537,7 @@ class Paysondirect extends PaymentModule {
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-                if($this->cartExists((int) $cart->id)==false){
+                if(($this->cartExists((int) $cart->id) == false)&&($this->orderExists((int) $paymentDetails->getPurchaseId()) == false)){
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 }
@@ -562,7 +566,7 @@ class Paysondirect extends PaymentModule {
                 // Recalculate order total after invoice fee has been added
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-                if($this->cartExists((int) $cart->id) == false){
+                if(($this->cartExists((int) $cart->id) == false)&&($this->orderExists((int) $paymentDetails->getPurchaseId()) == false)){
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 }
