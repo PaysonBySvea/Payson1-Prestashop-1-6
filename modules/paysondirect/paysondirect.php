@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.8.2';
+        $this->version = '2.3.8.3';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -511,10 +511,13 @@ class Paysondirect extends PaymentModule {
     }
 
     public function CreateOrder($cart_id, $token, $ipnResponse = NULL) {
-        require('../../header.php');
+        include_once(dirname(__FILE__) . '/../../config/config.inc.php');
         $cart = new Cart($cart_id);
         $customer = new Customer($cart->id_customer);
 
+        if ($cart->id_customer == 0 OR $cart->id_address_delivery == 0 OR $cart->id_address_invoice == 0 OR !$this->active)
+            Tools::redirect('index.php?controller=order&step=1');
+        
         if (!Validate::isLoadedObject($customer))
             Tools::redirect('index.php?controller=order&step=1');
 
