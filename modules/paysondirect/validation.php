@@ -22,5 +22,5 @@ foreach (Module::getPaymentModules() as $module)
 if (!$authorized)
     die(Tools::displayError('This payment method Payson direct is not available.'));
 
-$payson->CreateOrder($cart_id, $token);
+$payson->CreateOrder($cart_id, $token, NULL);
 ?>

@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.8.3';
+        $this->version = '2.3.8.4';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -484,7 +484,8 @@ class Paysondirect extends PaymentModule {
         echo $error_code;
         exit;
     }
-        public function PaysonorderExists($purchaseid) {
+	
+    public function PaysonorderExists($purchaseid) {
         $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'payson_order_event` WHERE `purchase_id` = ' . (int) $purchaseid);
         return $result;
     }
@@ -493,10 +494,12 @@ class Paysondirect extends PaymentModule {
         $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_cart` = ' . (int) $cartId);
         return $result;
     }
-    public function orderExists($purchaseid) {
-        $result = (bool) Db::getInstance()->getValue('SELECT count(*) FROM `' . _DB_PREFIX_ . 'orders` WHERE `purchase_id` = ' . (int) $purchaseid);
-        return $result;
+	
+	public function orderExistsPaysonEvents($purchaseid) {
+         $result = Db::getInstance()->getValue('SELECT order_id FROM `' . _DB_PREFIX_ . 'payson_order_event` WHERE `purchase_id` = ' . (int) $purchase_id);
+         return $result;
     }
+	
     public function getAPIInstance() {
 
         if ($this->testMode) {
@@ -512,6 +515,8 @@ class Paysondirect extends PaymentModule {
 
     public function CreateOrder($cart_id, $token, $ipnResponse = NULL) {
         include_once(dirname(__FILE__) . '/../../config/config.inc.php');
+		$paymentDetails = NULL;
+		
         $cart = new Cart($cart_id);
         $customer = new Customer($cart->id_customer);
 
@@ -540,10 +545,11 @@ class Paysondirect extends PaymentModule {
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-                if(($this->cartExists((int) $cart->id) == false)&&($this->orderExists((int) $paymentDetails->getPurchaseId()) == false)){
+                if(($this->cartExists((int) $cart->id) == false)&&($this->PaysonorderExists((int) $paymentDetails->getPurchaseId()) == false)){
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
-                }
+					$this->createPaysonOrderEvents($paymentDetails, $this->currentOrder);
+				}
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . (int) $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getStatus() == 'PENDING' && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED') {
 
@@ -569,16 +575,18 @@ class Paysondirect extends PaymentModule {
                 // Recalculate order total after invoice fee has been added
 
                 $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-                if(($this->cartExists((int) $cart->id) == false)&&($this->orderExists((int) $paymentDetails->getPurchaseId()) == false)){
+                if(($this->cartExists((int) $cart->id) == false)&&($this->PaysonorderExists((int) $paymentDetails->getPurchaseId()) == false)){
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
-                }
+					$this->createPaysonOrderEvents($paymentDetails, $this->currentOrder);
+				}
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $this->currentOrder . '&key=' . $customer->secure_key);
             } elseif ($paymentDetails->getStatus() == 'ERROR' || $paymentDetails->getStatus()=='DENIED'||$paymentDetails->getStatus()=='EXPIRED') {
                 $customer = new Customer($cart->id_customer);
 
                 $this->validateOrder((int) $cart->id, _PS_OS_CANCELED_, $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '   ' . $this->l('Order denied.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 //Tools::redirectLink('history.php');
+				$this->createPaysonOrderEvents($paymentDetails, $this->currentOrder);
                 $this->paysonApiError($this->l('The payment was denied. Please try using a different payment method.'));
             } else {
                 $this->validateOrder((int) $cart->id, _PS_OS_ERROR_, 0, $this->displayName, $this->l('The transaction could not be completed.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
@@ -592,6 +600,47 @@ class Paysondirect extends PaymentModule {
             $order = Order::getOrderByCartId($cart->id);
 
             Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
+        }
+    }
+	
+	    /*
+     * @return void
+     * @param $ipn_respons
+     * @disc The function save the parameters in the database
+     */
+
+    public function createPaysonOrderEvents($response, $currentOrderId = 0) {
+        include_once(_PS_MODULE_DIR_ . 'paysondirect/payson_api/def.payson.php');
+        $table_order_events = _DB_PREFIX_ . $paysonDbTableOrderEvents;
+      
+        if ($this->PaysonorderExists($response->getPurchaseId()) == false) {
+            
+            $paysonDirectInsert = "
+            order_id                      = '" . $currentOrderId . "', 
+            valid                         = '1', 
+            added                         = NOW(), 
+            updated                       = NOW(), 
+            ipn_status                    = '" . $response->getStatus() . "', 	
+            sender_email                  = '" . $response->getSenderEmail() . "', 
+            currency_code                 = '" . $response->getCurrencyCode() . "',
+            tracking_id                   = '" . $response->getTrackingId() . "',
+            type                          = '" . $response->getType() . "',
+            purchase_id                   = '" . $response->getPurchaseId() . "',					
+            customer                      = '" . $response->getCustom() . "', 		
+            token                         = '" . $response->getToken() . "'";
+        
+            $paysonInvoiceInsert = ""; 
+            if ($response->getType() == "INVOICE") { 
+               $paysonInvoiceInsert = ", 
+               invoice_status                  = '" . $response->getInvoiceStatus() . "',  
+               shippingAddress_name            = '" . $response->getShippingAddressName() . "',  
+               shippingAddress_street_ddress   = '" . $response->getShippingAddressStreetAddress() . "',  
+ 	           shippingAddress_postal_code     = '" . $response->getShippingAddressPostalCode() . "',  
+ 	           shippingAddress_city            = '" . $response->getShippingAddressCity() . "',  
+               shippingAddress_country         = '" . $response->getShippingAddressCountry() . "'"; 
+            } 
+
+            Db::getInstance()->Execute("INSERT INTO " . $table_order_events . " SET " . $paysonDirectInsert . $paysonInvoiceInsert);
         }
     }
 
