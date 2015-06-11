@@ -76,7 +76,7 @@ if (Configuration::get('PS_SSL_ENABLED') || Configuration::get('PS_SSL_ENABLED_E
         
 $paysonUrl = array(
     'returnUrl' => $protocol . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart->id,
-    'ipnNotificationUrl' => "http://" . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart->id,
+    'ipnNotificationUrl' => $protocol . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart->id,
     'cancelUrl' => $protocol . $url . "index.php?controller=order"
 );
 
