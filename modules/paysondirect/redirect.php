@@ -68,10 +68,16 @@ $url = Tools::getHttpHost(false, true) . __PS_BASE_URI__;
 
 $trackingId = time();
 
+if (Configuration::get('PS_SSL_ENABLED') || Configuration::get('PS_SSL_ENABLED_EVERYWHERE')){
+            $protocol = 'https://';
+        }else{
+            $protocol = 'http://';
+        }
+        
 $paysonUrl = array(
-    'returnUrl' => "http://" . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart->id,
+    'returnUrl' => $protocol . $url . "modules/paysondirect/validation.php?trackingId=" . $trackingId . "&id_cart=" . $cart->id,
     'ipnNotificationUrl' => "http://" . $url . 'modules/paysondirect/ipn_payson.php?id_cart=' . $cart->id,
-    'cancelUrl' => "http://" . $url . "index.php?controller=order"
+    'cancelUrl' => $protocol . $url . "index.php?controller=order"
 );
 
 $orderItems = orderItemsList($cart, $payson);
