@@ -7,6 +7,7 @@
  * @copyright Copyright 2012 Payson
  */
 include_once(dirname(__FILE__) . '/../../config/config.inc.php');
+include_once(dirname(__FILE__) . '/../../header.php');
 /*
  * @return void
  * @param int $id_cart

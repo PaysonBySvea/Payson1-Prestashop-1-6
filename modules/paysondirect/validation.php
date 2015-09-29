@@ -1,6 +1,7 @@
 <?php
 include_once(dirname(__FILE__) . '/../../config/config.inc.php');
 include_once(dirname(__FILE__) . '/paysondirect.php');
+include_once(dirname(__FILE__) . '/../../header.php');
 
 if (version_compare(_PS_VERSION_, '1.5.0.0 ', '>=')) {
     $context = Context::getContext();
