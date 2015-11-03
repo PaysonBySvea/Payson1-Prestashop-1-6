@@ -202,6 +202,12 @@ function orderItemsList($cart, $payson) {
                 isset($carrier->name) ? $carrier->name : 'shipping', number_format($total_shipping_wot, 2, '.', ''), 1, number_format($carriertax_rate, 2, '.', ''), 9998
         );
     }
+	
+	 if ($cart->gift) {
+        $orderitemslist[] = new OrderItem(
+                'gift wrapping', number_format($cart->getGiftWrappingPrice(false), 2, '.', ''), 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 2, '.', ''), 9999
+        );
+    }
 
 
     return $orderitemslist;
