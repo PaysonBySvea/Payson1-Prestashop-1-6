@@ -47,7 +47,6 @@ class Paysondirect extends PaymentModule {
         if(!$orderStates){
             $db = Db::getInstance();
             $db->insert("order_state", array(
-                "id_order_state" => "null",
                 "invoice" => "1",
                 "send_email" => "1",
                 "module_name" => "paysondirect",
