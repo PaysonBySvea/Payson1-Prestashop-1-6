@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.8.8';
+        $this->version = '2.3.8.9';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -554,7 +554,7 @@ class Paysondirect extends PaymentModule {
 
                 //since this in an invoice, we need to create shippingadress
                 $address = new Address(intval($cart->id_address_delivery));
-				$address->firstname = str_replace(array(':'), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, strpos($paymentDetails->getShippingAddressName(), ' ', 31)) : $paymentDetails->getShippingAddressName()));
+				$address->firstname = str_replace(array(':',',', ';', '+', '"', "'"), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, $address::$definition['fields']['firstname']['size']) : $paymentDetails->getShippingAddressName()));
                 $address->lastname = ' ';
                 $address->address1 = $paymentDetails->getShippingAddressStreetAddress();
                 $address->address2 = '';
