@@ -204,8 +204,9 @@ function orderItemsList($cart, $payson) {
     }
 	
 	 if ($cart->gift) {
+        $wrapping_price_temp = Tools::convertPrice((float) $cart->getOrderTotal(false, Cart::ONLY_WRAPPING), Currency::getCurrencyInstance((int) $cart->id_currency));
         $orderitemslist[] = new OrderItem(
-                'gift wrapping', number_format($cart->getGiftWrappingPrice(false), 2, '.', ''), 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 2, '.', ''), 9999
+                'gift wrapping', $wrapping_price_temp, 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 4, '.', ''), 9999
         );
     }
 
