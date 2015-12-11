@@ -172,7 +172,8 @@ function orderItemsList($cart, $payson) {
 
 // check four discounts
     $cartDiscounts = $cart->getDiscounts();
-
+	$carrier = new Carrier($cart->id_carrier, $cart->id_lang);
+	
     $tax_rate_discount = 0;
     $taxDiscount = Cart::getTaxesAverageUsed((int) ($cart->id));
     if (isset($taxDiscount) AND $taxDiscount != 1){
@@ -180,17 +181,18 @@ function orderItemsList($cart, $payson) {
     }
 
     foreach ($cartDiscounts AS $cartDiscount) {
+        if ((!$carrier->is_free && !$cartDiscount['reduction_tax']) || ($carrier->is_free && !$cartDiscount['reduction_tax']) || (!$carrier->is_free && $cartDiscount['reduction_tax'])){
+            $value = (Tools::ps_round($cartDiscount['value_real'], Configuration::get('PS_PRICE_DISPLAY_PRECISION')) - (empty($cartDiscounts) ? 0 : $cartDiscounts[$i]['obj']->free_shipping ? Tools::ps_round($total_shipping_wt, Configuration::get('PS_PRICE_DISPLAY_PRECISION')) : 0)) / (1 + $tax_rate_discount);
+        }else{
+            $value = $cartDiscount['value_tax_exc']; //$objDiscount->getValue(sizeof($cartDiscounts), $cart->getOrderTotal(true, 1), $cart->getTotalShippingCost(), $cart->id);
+        }
 
-        //$objDiscount = new Discount(intval($cartDiscount['id_discount']));
-        $value = $cartDiscount['value_tax_exc']; //$objDiscount->getValue(sizeof($cartDiscounts), $cart->getOrderTotal(true, 1), $cart->getTotalShippingCost(), $cart->id);
-
-        $orderitemslist[] = new OrderItem($cartDiscount['name'], number_format(-$value, 2, '.', ''), 1, $tax_rate_discount, 'Rabatt');
+        $orderitemslist[] = new OrderItem($cartDiscount['name'], number_format(-$value, 2, '.', ''), 1, $tax_rate_discount, 'discoun');
     }
 
     $total_shipping_wt = _PS_VERSION_ >= 1.5 ? floatval($cart->getTotalShippingCost()) : floatval($cart->getOrderShippingCost());
 
     if ($total_shipping_wt > 0) {
-        $carrier = new Carrier($cart->id_carrier, $cart->id_lang);
 
         $carriertax = Tax::getCarrierTaxRate((int) $carrier->id, $cart->id_address_invoice);
         $carriertax_rate = $carriertax / 100;
