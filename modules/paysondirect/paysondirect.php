@@ -530,19 +530,22 @@ class Paysondirect extends PaymentModule {
             Tools::redirect('index.php?controller=order&step=1');
 
         $api = $this->getAPIInstance();
-
+        //sleep has been implemented to ensure that two orders will be created at the exact same time.
         // If we are returning from from checkout we check payment details
         // to verify the status of this order. Otherwise if it is a IPN call
         // we do not have to get the details again as we have all the details in 
         // the IPN response
         if ($ipnResponse == NULL) {
+            $returnResponse = 1;
+            sleep($returnResponse);            
             $paymentDetails = $api->paymentDetails(new PaymentDetailsData($token))->getPaymentDetails();
         } else {
-            //sleep has been implemented to ensure that two orders won't be created at the exact same time.
-            sleep(2);
+            $exceutionTimer = isset($returnResponse)? $returnResponse + 1 : 1;
+            sleep($exceutionTimer);
             $ReturnCallUrl="ipnCall";
             $paymentDetails = $ipnResponse;
         }
+        $returnResponse = NULL;
         if ($cart->OrderExists() == false && ($this->PaysonorderExists((int) $paymentDetails->getPurchaseId()) == false)) {
 
             $currency = new Currency($cart->id_currency);
