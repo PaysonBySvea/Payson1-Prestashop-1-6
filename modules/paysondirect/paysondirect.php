@@ -530,7 +530,7 @@ class Paysondirect extends PaymentModule {
             Tools::redirect('index.php?controller=order&step=1');
 
         $api = $this->getAPIInstance();
-        //sleep has been implemented to ensure that two orders will be created at the exact same time.
+        //sleep has been implemented to ensure that two orders won't be created at the exact same time.
         // If we are returning from from checkout we check payment details
         // to verify the status of this order. Otherwise if it is a IPN call
         // we do not have to get the details again as we have all the details in 
