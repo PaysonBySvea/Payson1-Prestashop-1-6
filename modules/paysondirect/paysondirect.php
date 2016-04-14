@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.9.1';
+        $this->version = '2.3.9.2';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -507,14 +507,23 @@ class Paysondirect extends PaymentModule {
         return $api;
     }
 
+    private function returnCall($code) {
+        $this->responseCode($code);
+        exit();
+    }
+
+    private function responseCode($code) {
+        return var_dump(http_response_code($code));
+    }
+
     public function CreateOrder($cart_id, $token, $ipnResponse = NULL) {
         include_once(dirname(__FILE__) . '/../../config/config.inc.php');
 		$paymentDetails = NULL;
 		
         $cart = new Cart($cart_id);
         $customer = new Customer($cart->id_customer);
-
-        if ($cart->id_customer == 0 OR $cart->id_address_delivery == 0 OR $cart->id_address_invoice == 0 OR !$this->active)
+        $ReturnCallUrl="";
+        if ($cart->id_customer == 0 OR $cart->id_address_delivery == 0 OR $cart->id_address_invoice == 0 OR ! $this->active)
             Tools::redirect('index.php?controller=order&step=1');
         
         if (!Validate::isLoadedObject($customer))
@@ -529,6 +538,9 @@ class Paysondirect extends PaymentModule {
         if ($ipnResponse == NULL) {
             $paymentDetails = $api->paymentDetails(new PaymentDetailsData($token))->getPaymentDetails();
         } else {
+            //sleep has been implemented to ensure that two orders won't be created at the exact same time.
+            sleep(2);
+            $ReturnCallUrl="ipnCall";
             $paymentDetails = $ipnResponse;
         }
         if ($cart->OrderExists() == false && ($this->PaysonorderExists((int) $paymentDetails->getPurchaseId()) == false)) {
@@ -548,7 +560,7 @@ class Paysondirect extends PaymentModule {
 
                 //since this in an invoice, we need to create shippingadress
                 $address = new Address(intval($cart->id_address_delivery));
-				$address->firstname = str_replace(array(':',',', ';', '+', '"', "'"), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, $address::$definition['fields']['firstname']['size']) : $paymentDetails->getShippingAddressName()));
+		$address->firstname = str_replace(array(':',',', ';', '+', '"', "'"), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, $address::$definition['fields']['firstname']['size']) : $paymentDetails->getShippingAddressName()));
                 $address->lastname = ' ';
                 $address->address1 = $paymentDetails->getShippingAddressStreetAddress();
                 $address->address2 = '';
@@ -585,16 +597,18 @@ class Paysondirect extends PaymentModule {
                 $this->validateOrder((int) $cart->id, _PS_OS_ERROR_, 0, $this->displayName, $this->l('The transaction could not be completed.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 Tools::redirectLink('history.php');
             }
-             
         } else {
             $order = Order::getOrderByCartId($cart->id);
 //            $this->logit(' OrderExist, $currentorder: '. $order. ' PurchaseId: '.$paymentDetails->getPurchaseId());
             $this->updatePaysonOrderEvents($paymentDetails, $order);
             // No point of redirecting if it is the IPN call
-            if ($ipnResponse) {
-                return;
+            if ($ReturnCallUrl == 'ipnCall') {
+                $this->returnCall(200);
             }
             Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
+        }
+        if ($ReturnCallUrl == 'ipnCall') {
+            $this->returnCall(200);
         }
     }
 	
