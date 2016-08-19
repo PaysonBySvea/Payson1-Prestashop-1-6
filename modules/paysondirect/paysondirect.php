@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.9.2';
+        $this->version = '2.3.9.3';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -563,7 +563,7 @@ class Paysondirect extends PaymentModule {
 
                 //since this in an invoice, we need to create shippingadress
                 $address = new Address(intval($cart->id_address_delivery));
-		$address->firstname = str_replace(array(':',',', ';', '+', '"', "'"), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, $address::$definition['fields']['firstname']['size']) : $paymentDetails->getShippingAddressName()));
+				$address->firstname = str_replace(array(':',',', ';', '+', '"', "'"), array(' '), (strlen($paymentDetails->getShippingAddressName()) > 31 ? substr($paymentDetails->getShippingAddressName(), 0, $address::$definition['fields']['firstname']['size']) : $paymentDetails->getShippingAddressName()));
                 $address->lastname = ' ';
                 $address->address1 = $paymentDetails->getShippingAddressStreetAddress();
                 $address->address2 = '';
@@ -599,6 +599,38 @@ class Paysondirect extends PaymentModule {
             } else {
                 $this->validateOrder((int) $cart->id, _PS_OS_ERROR_, 0, $this->displayName, $this->l('The transaction could not be completed.') . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
                 Tools::redirectLink('history.php');
+            }
+        } elseif (($cart->OrderExists() && $paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') || ($paymentDetails->getType() == "INVOICE" && $paymentDetails->getInvoiceStatus() == 'ORDERCREATED')) {
+            $sql = 'SELECT `id_order`
+				FROM `'._DB_PREFIX_.'orders`
+                WHERE `id_cart` = '.(int)$cart->id
+                    .Shop::addSqlRestriction();
+            $result = Db::getInstance()->executeS($sql);
+            
+            foreach ($result as $orderId){
+                $history = new OrderHistory();               
+                $history->id_order = (int)$orderId['id_order'];
+                $history->changeIdOrderState(Configuration::get("PAYSON_ORDER_STATE_PAID"), (int)($orderId['id_order']));
+				
+                if ($ReturnCallUrl == 'ipnCall') {
+                    $history->addWithemail();   
+                    $this->returnCall(200);
+                }
+				$history->save();
+            
+                $msg = new Message();
+                $message = strip_tags($this->l('Payson reference:  ') . $paymentDetails->getPurchaseId()  . '   ' .  $paymentDetails->getStatus() , '<br>');
+                if (Validate::isCleanHtml($message)) {
+                    $msg->message = $message;
+                    $msg->id_cart = (int)$cart->id;
+                    $msg->id_customer = (int)($cart->id_customer);
+                    $msg->id_order = (int)$orderId['id_order'];
+                    $msg->private = 1;
+                    $msg->add();
+                }
+            }
+            if ($ReturnCallUrl != 'ipnCall') {
+                Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
             }
         } else {
             $order = Order::getOrderByCartId($cart->id);
