@@ -26,19 +26,23 @@ $invoiceEnabled = Configuration::get('PAYSON_INVOICE_ENABLED') == 1;
 $isInvoicePurchase = isset($_GET["method"]) && ($_GET["method"] == "invoice");
 
 if ($isInvoicePurchase && !$invoiceEnabled){
-    die('Cant pay with invoice when invoice isnt enabled');
+	Logger::addLog('Cant pay with invoice when invoice isnt enabled', 1, NULL, NULL, NULL, true);
+    Tools::redirect('index.php?controller=order&step=1');
 }
 
 if (!Validate::isEmail($receiverEmail)){
-    die($payson->getL('Payson error: (invalid or undefined business account email)'));
+	Logger::addLog($payson->getL('Payson error: (invalid or undefined business account email)'), 1, NULL, NULL, NULL, true);
+    Tools::redirect('index.php?controller=order&step=1');
 }
 
 if (!Validate::isLoadedObject($address)){
-    die($payson->getL('Payson error: (invalid address)'));
+    Logger::addLog($payson->getL('Payson error: (invalid address)'), 1, NULL, NULL, NULL, true);
+    Tools::redirect('index.php?controller=order&step=1');
 }
 
 if (!Validate::isLoadedObject($customer)){
-    die($payson->getL('Payson error: (invalid customer)'));
+    Logger::addLog($payson->getL('Payson error: (invalid customer)'), 1, NULL, NULL, NULL, true);
+    Tools::redirect('index.php?controller=order&step=1');
 }
 
 // check currency of payment
