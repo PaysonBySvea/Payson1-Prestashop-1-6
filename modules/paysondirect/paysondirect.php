@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.9.3';
+        $this->version = '2.3.9.4';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -608,26 +608,29 @@ class Paysondirect extends PaymentModule {
             $result = Db::getInstance()->executeS($sql);
             
             foreach ($result as $orderId){
-                $history = new OrderHistory();               
-                $history->id_order = (int)$orderId['id_order'];
-                $history->changeIdOrderState(Configuration::get("PAYSON_ORDER_STATE_PAID"), (int)($orderId['id_order']));
+                $objOrder = new Order((int)$orderId['id_order']);
+                if ($objOrder->getCurrentState() != Configuration::get("PAYSON_ORDER_STATE_PAID")){				
+					$history = new OrderHistory();               
+					$history->id_order = (int)$orderId['id_order'];
+					$history->changeIdOrderState(Configuration::get("PAYSON_ORDER_STATE_PAID"), (int)($orderId['id_order']));
+					
+					if ($ReturnCallUrl === 'ipnCall') {
+						$history->addWithemail();   
+						//$this->returnCall(200);
+					}
+					$history->save();
 				
-                if ($ReturnCallUrl == 'ipnCall') {
-                    $history->addWithemail();   
-                    $this->returnCall(200);
-                }
-				$history->save();
-            
-                $msg = new Message();
-                $message = strip_tags($this->l('Payson reference:  ') . $paymentDetails->getPurchaseId()  . '   ' .  $paymentDetails->getStatus() , '<br>');
-                if (Validate::isCleanHtml($message)) {
-                    $msg->message = $message;
-                    $msg->id_cart = (int)$cart->id;
-                    $msg->id_customer = (int)($cart->id_customer);
-                    $msg->id_order = (int)$orderId['id_order'];
-                    $msg->private = 1;
-                    $msg->add();
-                }
+					$msg = new Message();
+					$message = strip_tags($this->l('Payson reference:  ') . $paymentDetails->getPurchaseId()  . '   ' .  $paymentDetails->getStatus() , '<br>');
+					if (Validate::isCleanHtml($message)) {
+						$msg->message = $message;
+						$msg->id_cart = (int)$cart->id;
+						$msg->id_customer = (int)($cart->id_customer);
+						$msg->id_order = (int)$orderId['id_order'];
+						$msg->private = 1;
+						$msg->add();
+					}
+				}
             }
             if ($ReturnCallUrl != 'ipnCall') {
                 Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $cart->id . '&id_module=' . $this->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
