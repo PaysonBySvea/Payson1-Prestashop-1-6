@@ -102,7 +102,7 @@ $shopInfo = array(
 $api = $payson->getAPIInstance();
 
 if ($payson->testMode) {
-    $receiver = new Receiver('testagent-1@payson.se', $amount);
+    $receiver = new Receiver('testagent-checkout2@payson.se', $amount);
     $sender = new Sender(Configuration::get('PAYSON_SANDBOX_CUSTOMER_EMAIL'), 'name', 'lastname');
 } else {
     $receiver = new Receiver($receiverEmail, $amount);
