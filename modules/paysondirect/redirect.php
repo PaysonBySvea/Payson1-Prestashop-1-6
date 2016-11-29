@@ -26,12 +26,12 @@ $invoiceEnabled = Configuration::get('PAYSON_INVOICE_ENABLED') == 1;
 $isInvoicePurchase = isset($_GET["method"]) && ($_GET["method"] == "invoice");
 
 if ($isInvoicePurchase && !$invoiceEnabled){
-	Logger::addLog('Cant pay with invoice when invoice isnt enabled', 1, NULL, NULL, NULL, true);
+    Logger::addLog('Cant pay with invoice when invoice isnt enabled', 1, NULL, NULL, NULL, true);
     Tools::redirect('index.php?controller=order&step=1');
 }
 
 if (!Validate::isEmail($receiverEmail)){
-	Logger::addLog($payson->getL('Payson error: (invalid or undefined business account email)'), 1, NULL, NULL, NULL, true);
+    Logger::addLog($payson->getL('Payson error: (invalid or undefined business account email)'), 1, NULL, NULL, NULL, true);
     Tools::redirect('index.php?controller=order&step=1');
 }
 
@@ -65,7 +65,7 @@ if ($currency_order->id != $currency_module['id_currency']) {
     $cart->update();
 }
 
-$useAllInOne = Configuration::get('PAYSON_INVOICE_ENABLED') == 1 && Configuration::get('PAYSON_ALL_IN_ONE_ENABLED') == 1 ? 1 : NULL;
+$useAllInOne = Configuration::get('PAYSON_INVOICE_ENABLED') == 1 && Configuration::get('PAYSON_ALL_IN_ONE_ENABLED') == 1 && Context::getContext()->country->iso_code == 'SE'? 1 : NULL;
 $amount = floatval($cart->getOrderTotal(true, 3));
 
 if ($isInvoicePurchase){
@@ -176,8 +176,8 @@ function orderItemsList($cart, $payson) {
 
 // check four discounts
     $cartDiscounts = $cart->getDiscounts();
-	$carrier = new Carrier($cart->id_carrier, $cart->id_lang);
-	
+    $carrier = new Carrier($cart->id_carrier, $cart->id_lang);
+    
     $tax_rate_discount = 0;
     $taxDiscount = Cart::getTaxesAverageUsed((int) ($cart->id));
     if (isset($taxDiscount) AND $taxDiscount != 1){
@@ -208,8 +208,8 @@ function orderItemsList($cart, $payson) {
                 isset($carrier->name) ? $carrier->name : 'shipping', number_format($total_shipping_wot, 2, '.', ''), 1, number_format($carriertax_rate, 2, '.', ''), 9998
         );
     }
-	
-	 if ($cart->gift) {
+    
+     if ($cart->gift) {
         $wrapping_price_temp = Tools::convertPrice((float) $cart->getOrderTotal(false, Cart::ONLY_WRAPPING), Currency::getCurrencyInstance((int) $cart->id_currency));
         $orderitemslist[] = new OrderItem(
                 'gift wrapping', $wrapping_price_temp, 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 4, '.', ''), 9999
