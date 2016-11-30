@@ -18,7 +18,7 @@ class Paysondirect extends PaymentModule {
     public function __construct() {
         $this->name = 'paysondirect';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.9.5';
+        $this->version = '2.3.9.6';
         $this->currencies = true;
         $this->author = 'Payson AB';
         $this->module_key = '94873fa691622bfefa41af2484650a2e';
@@ -550,10 +550,13 @@ class Paysondirect extends PaymentModule {
 
             $currency = new Currency($cart->id_currency);
 
-            
+            $amountPaydPaysonApi = $paymentDetails->getReceivers();
+
             if ($paymentDetails->getStatus() == 'COMPLETED' && $paymentDetails->getType() == 'TRANSFER') {
 
-                $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+            	$total = (float) $cart->getOrderTotal(true, Cart::BOTH) < $amountPaydPaysonApi[0]->getAmount() + 1 && (float) $cart->getOrderTotal(true, Cart::BOTH) > $amountPaydPaysonApi[0]->getAmount() - 1 ? (float) $cart->getOrderTotal(true, Cart::BOTH) : $amountPaydPaysonApi[0]->getAmount();
+                
+                //$total = (float) $cart->getOrderTotal(true, Cart::BOTH);
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
 					$this->createPaysonOrderEvents($paymentDetails, $this->currentOrder);
@@ -581,8 +584,8 @@ class Paysondirect extends PaymentModule {
                 Db::getInstance()->Execute('INSERT INTO ' . _DB_PREFIX_ . 'cart_product (id_cart, id_product, id_product_attribute, quantity, date_add) VALUES(' . $cart->id . ',' . intval($invoicefee['id_product']) . ',0,1,\'' . pSql(date('Y-m-d h:i:s')) . '\')');
 
                 // Recalculate order total after invoice fee has been added
-
-                $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+                $total = (float) $cart->getOrderTotal(true, Cart::BOTH) < $amountPaydPaysonApi[0]->getAmount() + 1 && (float) $cart->getOrderTotal(true, Cart::BOTH) > $amountPaydPaysonApi[0]->getAmount() - 1 ? (float) $cart->getOrderTotal(true, Cart::BOTH) : $amountPaydPaysonApi[0]->getAmount();
+                //$total = (float) $cart->getOrderTotal(true, Cart::BOTH);
 
                     //Confirmation letter will be sent out with validateOrder with the function Mail::send
                     $this->validateOrder((int) $cart->id, Configuration::get("PAYSON_ORDER_STATE_PAID"), $total, $this->displayName, $this->l('Payson reference:  ') . $paymentDetails->getPurchaseId() . '<br />', array(), (int) $currency->id, false, $customer->secure_key);
