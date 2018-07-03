@@ -7,7 +7,7 @@
 
 ## Backup
 
-* You should always backup your files and database before installing or upgdating modules
+* You should always backup your files and database before installing or updating modules
 
 
 ## Installation/Update
