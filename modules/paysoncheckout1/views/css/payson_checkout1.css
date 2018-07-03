@@ -1,0 +1,27 @@
+p.payment_module a.payment-payson-checkout1 {
+    background-color: #fbfbfb;
+}
+
+p.payment_module a.payment-payson-checkout1::after {
+    display: block;
+    content: "\f054";
+    position: absolute;
+    right: 15px;
+    margin-top: -11px;
+    top: 50%;
+    font-family: "FontAwesome";
+    font-size: 25px;
+    height: 22px;
+    width: 14px;
+    color: #777;
+}
+
+p.payment_module a.payment-payson-checkout1 img {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+}
+
+p.payment_module a.payment-payson-checkout1:hover {
+    background-color: #f6f6f6;
+}
