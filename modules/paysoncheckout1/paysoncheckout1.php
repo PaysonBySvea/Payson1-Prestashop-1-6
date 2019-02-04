@@ -584,6 +584,14 @@ class PaysonCheckout1 extends PaymentModule
             $notificationUri = $this->context->link->getModuleLink('paysoncheckout1', 'notifications', array('trackingId' => $trackingId, 'id_cart' => $cart->id, 'call' => 'notification'));
 
             $constraints = $this->getConstraints(Configuration::get('PAYSONCHECKOUT1_PAYMENT_METHODS'));
+			
+			if (in_array(FundingConstraint::INVOICE, $constraints) && $currency->iso_code != Tools::strtolower('sek')) {
+                // Can only use invoice with SEK
+                if (($key = array_search(FundingConstraint::INVOICE, $constraints)) !== false) {
+                    unset($constraints[$key]);
+                }
+                $constraints = array_values($constraints);
+            }
 
             $invoiceFee = null;
 
