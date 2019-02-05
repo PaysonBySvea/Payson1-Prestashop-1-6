@@ -585,7 +585,7 @@ class PaysonCheckout1 extends PaymentModule
 
             $constraints = $this->getConstraints(Configuration::get('PAYSONCHECKOUT1_PAYMENT_METHODS'));
 			
-			if (in_array(FundingConstraint::INVOICE, $constraints) && $currency->iso_code != Tools::strtolower('sek')) {
+			if (in_array(FundingConstraint::INVOICE, $constraints) && Tools::strtolower($currency->iso_code) != 'sek') {
                 // Can only use invoice with SEK
                 if (($key = array_search(FundingConstraint::INVOICE, $constraints)) !== false) {
                     unset($constraints[$key]);
