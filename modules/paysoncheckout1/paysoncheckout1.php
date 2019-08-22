@@ -26,7 +26,7 @@ class PaysonCheckout1 extends PaymentModule
     {
         $this->name = 'paysoncheckout1';
         $this->tab = 'payments_gateways';
-        $this->version = '2.0.14';
+        $this->version = '2.0.15';
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
         $this->author = 'Payson AB';
         $this->module_key = '';
@@ -843,11 +843,11 @@ class PaysonCheckout1 extends PaymentModule
                 $payson->discountApplies = 1;
             }
 
-            $my_taxrate = $cartProduct['rate'] / 100;
-            
-            if ($cartProduct['reference'] == 'PS_FA') {
-                $my_taxrate = 0.25;
-                $cartProduct['price'] = ($cartProduct['price'] * 0.8);
+            // Check if product tax is removed by Prestashop VAT-rules
+            if($cartProduct['total'] == $cartProduct['total_wt']) {
+            	$my_taxrate = 0;
+            } else {
+            	$my_taxrate = $cartProduct['rate'] / 100;
             }
 
             //$product_price = Tools::ps_round($cartProduct['price_wt'], $cur * _PS_PRICE_DISPLAY_PRECISION_);
