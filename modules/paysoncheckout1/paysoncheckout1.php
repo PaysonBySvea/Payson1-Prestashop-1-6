@@ -26,7 +26,7 @@ class PaysonCheckout1 extends PaymentModule
     {
         $this->name = 'paysoncheckout1';
         $this->tab = 'payments_gateways';
-        $this->version = '2.0.15';
+        $this->version = '2.0.16';
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
         $this->author = 'Payson AB';
         $this->module_key = '';
@@ -851,10 +851,11 @@ class PaysonCheckout1 extends PaymentModule
             }
 
             //$product_price = Tools::ps_round($cartProduct['price_wt'], $cur * _PS_PRICE_DISPLAY_PRECISION_);
-            $product_price = Tools::ps_round($cartProduct['price'], $cur * _PS_PRICE_DISPLAY_PRECISION_);
+            //$product_price = Tools::ps_round($cartProduct['price'], $cur * _PS_PRICE_DISPLAY_PRECISION_);    
+            $product_price = $cartProduct['price'];
             $attributes_small = isset($cartProduct['attributes_small']) ? $cartProduct['attributes_small'] : '';
             //$orderitemslist[] = new PaysonEmbedded\OrderItem($cartProduct['name'] . ' ' . $attributes_small, $product_price, $cartProduct['cart_quantity'], number_format($my_taxrate, 3, '.', ''), $cartProduct['id_product']);
-            $orderitemslist[] = new OrderItem($cartProduct['name'] . '  ' . $attributes_small, number_format($product_price, 2, '.', ''), $cartProduct['cart_quantity'], number_format($my_taxrate, 3, '.', ''), $cartProduct['id_product']);
+            $orderitemslist[] = new OrderItem($cartProduct['name'] . '  ' . $attributes_small, number_format($product_price, 4, '.', ''), $cartProduct['cart_quantity'], number_format($my_taxrate, 6, '.', ''), $cartProduct['id_product']);
         }
 
         $cartDiscounts = $cart->getDiscounts();
@@ -874,7 +875,7 @@ class PaysonCheckout1 extends PaymentModule
                 $shippingToSubtractFromDiscount = $total_shipping_wot;
             } else {
                 //$orderitemslist[] = new PaysonEmbedded\OrderItem(isset($carrier->name) ? $carrier->name : $this->l('Shipping'), $total_shipping_wt, 1, number_format($carriertax_rate, 2, '.', ''), $this->l('Shipping'), PaysonEmbedded\OrderItemType::SERVICE);
-                $orderitemslist[] = new OrderItem(isset($carrier->name) ? $carrier->name : $this->l('Shipping'), $total_shipping_wot, 1, number_format($carriertax_rate, 2, '.', ''), $this->l('Shipping'));
+                $orderitemslist[] = new OrderItem(isset($carrier->name) ? $carrier->name : $this->l('Shipping'), $total_shipping_wot, 1, number_format($carriertax_rate, 6, '.', ''), $this->l('Shipping'));
             }
         }
 
@@ -903,14 +904,14 @@ class PaysonCheckout1 extends PaymentModule
             }
 
             //$orderitemslist[] = new PaysonEmbedded\OrderItem($cart_rule["name"], -(Tools::ps_round(($value_real - $shippingToSubtractFromDiscount), $cur * _PS_PRICE_DISPLAY_PRECISION_)), 1, number_format(($discount_tax_rate * 0.01), 4, '.', ''), $this->l('Discount'), PaysonEmbedded\OrderItemType::DISCOUNT);
-            $orderitemslist[] = new OrderItem($cart_rule["name"], -(Tools::ps_round(($value_tax_exc - $shippingToSubtractFromDiscount), $cur * _PS_PRICE_DISPLAY_PRECISION_)), 1, number_format(($discount_tax_rate * 0.01), 4, '.', ''), $this->l('Discount'));
+            $orderitemslist[] = new OrderItem($cart_rule["name"], -(Tools::ps_round(($value_tax_exc - $shippingToSubtractFromDiscount), $cur * _PS_PRICE_DISPLAY_PRECISION_)), 1, number_format(($discount_tax_rate * 0.01), 6, '.', ''), $this->l('Discount'));
             $total_discounts += $value_real;
         }
 
         if ($cart->gift) {
             $wrappingTemp = number_format(Tools::convertPrice((float) $cart->getGiftWrappingPrice(false), Currency::getCurrencyInstance((int) $cart->id_currency)), Configuration::get('PS_PRICE_DISPLAY_PRECISION'), '.', '') * number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING))) / 100), 2, '.', '');
             //$orderitemslist[] = new PaysonEmbedded\OrderItem($this->l('Gift Wrapping'), $wrappingTemp, 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 2, '.', ''), 'wrapping', PaysonEmbedded\OrderItemType::SERVICE);
-            $orderitemslist[] = new OrderItem($this->l('Gift Wrapping'), $wrappingTemp, 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 4, '.', ''), 9999);
+            $orderitemslist[] = new OrderItem($this->l('Gift Wrapping'), $wrappingTemp, 1, number_format((((($cart->getOrderTotal(true, Cart::ONLY_WRAPPING) * 100) / $cart->getOrderTotal(false, Cart::ONLY_WRAPPING)) - 100) / 100), 6, '.', ''), 9999);
         }
 
         return $orderitemslist;
